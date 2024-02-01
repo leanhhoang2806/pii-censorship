@@ -28,7 +28,6 @@ for item in expected_output:
     for index, i in enumerate(item):
         item[index] = label_to_index[i]
 
-input_shape = tokenized_inputs['input_ids'].shape
 neurons = 32
 dropout = 0.2
 output_categories = len(all_labels)

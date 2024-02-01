@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  lm_trainer:
+    build:
+      context: .
+      dockerfile: Dockerfile

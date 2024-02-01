@@ -6,7 +6,7 @@ from tensorflow.keras.layers import Dense, Embedding, LSTM, Bidirectional
 import json
 
 # Load data
-with open("data/pii-detection-removal-from-educational-data/train.json") as file:
+with open("pii-detection-removal-from-educational-data/train.json") as file:
     json_data = json.load(file)
 
 documents = []

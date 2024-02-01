@@ -32,8 +32,7 @@ neurons = 32
 dropout = 0.2
 output_categories = len(all_labels)
 
-# Create MirroredStrategy for distributed training
-strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy
+strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
 
 with strategy.scope():
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')

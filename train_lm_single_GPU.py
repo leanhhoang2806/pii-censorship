@@ -34,6 +34,8 @@ for index, item in enumerate(list(all_labels)):
     label_to_index[item] = index + 1
 
 label_to_index['O'] = 0
+print("label_to_index")
+print(label_to_index)
 for item in expected_output:
     for index, i in enumerate(item):
         item[index] = label_to_index[i]

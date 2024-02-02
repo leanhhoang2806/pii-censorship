@@ -46,7 +46,11 @@ train_documents, test_documents, train_labels, test_labels = train_test_split(
 neurons = 32
 dropout = 0.2
 output_categories = len(all_labels)
-# Rest of your code remains unchanged
+class_weights = {}
+for label, index in label_to_index.items():
+    class_weights[index] = 1.0  # Set a default weight for class 'O'
+    if label != 'O':
+        class_weights[index] = len(train_labels) / (len(train_labels) * train_labels.count(label))
 
 # Using GPU, assuming TensorFlow is configured to use GPU
 strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
@@ -66,8 +70,8 @@ with strategy.scope():
         Dense(output_categories, activation='softmax')
     ])
 
-    # Compile the model
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    # Compile the model with class weights
+    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'], class_weight=class_weights)
 
     # Train the model with tqdm progress bar
     epochs = 10
@@ -95,7 +99,6 @@ with strategy.scope():
 
     # Print the summary of the model
     model.summary()
-
     # Tokenize the test data
     tokenized_test_inputs = tokenizer(test_documents, padding=True, truncation=True, return_tensors='tf')
     
@@ -110,7 +113,7 @@ with strategy.scope():
 
     random_index = random.randint(0, len(test_documents) - 1)
     random_test_document = test_documents[random_index]
-    random_test_expected_label = test_labels[random_index]
+    random_test_expected_label = test_labels[random_index]          
 
     # Print the selected example for visualization
     print("\nRandomly Selected Example from the Test Set:")

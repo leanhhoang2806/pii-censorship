@@ -34,8 +34,6 @@ for index, item in enumerate(list(all_labels)):
     label_to_index[item] = index + 1
 
 label_to_index['O'] = 0
-print("label_to_index")
-print(label_to_index)
 for item in expected_output:
     for index, i in enumerate(item):
         item[index] = label_to_index[i]
@@ -109,7 +107,9 @@ with strategy.scope():
     non_zero_test_predictions = np.argmax(test_predictions[:, 1:], axis=-1) + 1
 
     # Get true labels for non-zero labels
-    non_zero_test_true_labels = np.array([[label_to_index[label] for label in labels if label != 0] for labels in test_labels])
+    non_zero_test_true_labels = np.array([[label for label in labels if label != 0] for labels in test_labels])
+    print(non_zero_test_true_labels[0])
+    print(f"len of non_zero_test_true_label: {len(non_zero_test_true_labels)}")
 
     # Calculate accuracy for non-zero labels
     non_zero_test_accuracy = np.mean(non_zero_test_predictions == non_zero_test_true_labels)

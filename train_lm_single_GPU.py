@@ -38,6 +38,7 @@ for item in expected_output:
     for index, i in enumerate(item):
         item[index] = label_to_index[i]
 
+print(expected_output[0])
 # Split the data into train and test sets
 train_documents, test_documents, train_labels, test_labels = train_test_split(
     documents, expected_output, test_size=0.2, random_state=42
@@ -94,24 +95,3 @@ with strategy.scope():
 
     # Print the summary of the model
     model.summary()
-    # Tokenize the test data
-    tokenized_test_inputs = tokenizer(test_documents, padding=True, truncation=True, return_tensors='tf')
-    
-    # Encode labels for the test set
-    encoded_test_labels = np.zeros((len(test_labels), max_input_len), dtype=np.int32)
-    
-    # Evaluate the model on the test set
-    test_predictions = model.predict(tokenized_test_inputs['input_ids'])
-    
-    # Get predicted labels for non-zero labels
-    non_zero_test_predictions = np.argmax(test_predictions[:, 1:], axis=-1) + 1
-
-    # Get true labels for non-zero labels
-    non_zero_test_true_labels = np.array([[label for label in labels if label != 0] for labels in test_labels])
-    print(non_zero_test_true_labels[0])
-    print(f"len of non_zero_test_true_label: {len(non_zero_test_true_labels)}")
-
-    # Calculate accuracy for non-zero labels
-    non_zero_test_accuracy = np.mean(non_zero_test_predictions == non_zero_test_true_labels)
-
-    print(f"Test Accuracy for Non-Zero Labels: {non_zero_test_accuracy}")

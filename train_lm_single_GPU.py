@@ -43,6 +43,9 @@ train_documents, test_documents, train_labels, test_labels = train_test_split(
     documents, expected_output, test_size=0.2, random_state=42
 )
 
+neurons = 32
+dropout = 0.2
+output_categories = len(all_labels)
 # Rest of your code remains unchanged
 
 # Using GPU, assuming TensorFlow is configured to use GPU

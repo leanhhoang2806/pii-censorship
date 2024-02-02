@@ -107,3 +107,14 @@ with strategy.scope():
 
     print(f"Test Loss: {test_loss}")
     print(f"Test Accuracy: {test_accuracy}")
+
+    random_index = random.randint(0, len(test_documents) - 1)
+    random_test_document = test_documents[random_index]
+    random_test_expected_label = test_labels[random_index]
+
+    # Print the selected example for visualization
+    print("\nRandomly Selected Example from the Test Set:")
+    print("Document:")
+    print(random_test_document)
+    print("\nExpected Label:")
+    print(random_test_expected_label)

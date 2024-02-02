@@ -109,7 +109,7 @@ with strategy.scope():
     non_zero_test_predictions = np.argmax(test_predictions[:, 1:], axis=-1) + 1
 
     # Get true labels for non-zero labels
-    non_zero_test_true_labels = np.array([[label_to_index[label] for label in labels if label != 'O'] for labels in test_labels])
+    non_zero_test_true_labels = np.array([[label_to_index[label] for label in labels if label != 0] for labels in test_labels])
 
     # Calculate accuracy for non-zero labels
     non_zero_test_accuracy = np.mean(non_zero_test_predictions == non_zero_test_true_labels)

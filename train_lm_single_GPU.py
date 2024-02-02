@@ -74,7 +74,7 @@ with strategy.scope():
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'], class_weight=class_weights)
 
     # Train the model with tqdm progress bar
-    epochs = 10
+    epochs = 3
     batch_size = 1
     steps_per_epoch = len(tokenized_train_inputs['input_ids']) // batch_size
 
@@ -106,18 +106,15 @@ with strategy.scope():
     encoded_test_labels = np.zeros((len(test_labels), max_input_len), dtype=np.int32)
     
     # Evaluate the model on the test set
-    test_loss, test_accuracy = model.evaluate(tokenized_test_inputs['input_ids'], encoded_test_labels, verbose=0)
+    test_predictions = model.predict(tokenized_test_inputs['input_ids'])
+    
+    # Get predicted labels for non-zero labels
+    non_zero_test_predictions = np.argmax(test_predictions[:, 1:], axis=-1) + 1
 
-    print(f"Test Loss: {test_loss}")
-    print(f"Test Accuracy: {test_accuracy}")
+    # Get true labels for non-zero labels
+    non_zero_test_true_labels = np.array([[label_to_index[label] for label in labels if label != 'O'] for labels in test_labels])
 
-    random_index = random.randint(0, len(test_documents) - 1)
-    random_test_document = test_documents[random_index]
-    random_test_expected_label = test_labels[random_index]          
+    # Calculate accuracy for non-zero labels
+    non_zero_test_accuracy = np.mean(non_zero_test_predictions == non_zero_test_true_labels)
 
-    # Print the selected example for visualization
-    print("\nRandomly Selected Example from the Test Set:")
-    print("Document:")
-    print(random_test_document)
-    print("\nExpected Label:")
-    print(random_test_expected_label)
+    print(f"Test Accuracy for Non-Zero Labels: {non_zero_test_accuracy}")

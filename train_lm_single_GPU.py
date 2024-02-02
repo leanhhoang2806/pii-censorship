@@ -12,6 +12,8 @@ with open("pii-detection-removal-from-educational-data/train.json") as file:
     json_data = json.load(file)
 
 sampled_data = random.sample(json_data, int(0.01 * len(json_data)))
+print(f"Total number of data to train: {len(sampled_data)}")
+
 documents = []
 expected_output = []
 all_labels = set()

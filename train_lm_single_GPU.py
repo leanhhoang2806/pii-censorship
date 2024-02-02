@@ -11,7 +11,7 @@ import random
 with open("pii-detection-removal-from-educational-data/train.json") as file:
     json_data = json.load(file)
 
-sampled_data = random.sample(json_data, int(0.01 * 2 * len(json_data)))
+sampled_data = random.sample(json_data, int(0.01 * len(json_data)))
 print(f"Total number of data to train: {len(sampled_data)}")
 
 documents = []
@@ -52,7 +52,7 @@ with strategy.scope():
     model = Sequential([
         Embedding(input_dim=tokenizer.vocab_size, output_dim=neurons, input_shape=(input_shape[1],)),
         Bidirectional(LSTM(neurons*2, return_sequences=True, dropout=dropout, recurrent_dropout=dropout, implementation=2)),
-        Bidirectional(LSTM(neurons, return_sequences=True, dropout=dropout, recurrent_dropout=dropout, implementation=2)),
+        # Bidirectional(LSTM(neurons, return_sequences=True, dropout=dropout, recurrent_dropout=dropout, implementation=2)),
         Dense(output_categories, activation='softmax')
     ])
 
@@ -86,15 +86,29 @@ with strategy.scope():
     # Print the summary of the model
     model.summary()
 
-    new_texts = ["Another John joined the class."]
+# Load test data
+with open("pii-detection-removal-from-educational-data/test.json") as file:
+    test_json_data = json.load(file)
 
-    # Tokenize the new texts
-    new_tokenized_inputs = tokenizer(new_texts, padding=True, truncation=True, return_tensors='tf')
+test_documents = []
+test_expected_output = []
 
-    # Make predictions using the trained model
-    predictions = model.predict(new_tokenized_inputs['input_ids'])
+for item in test_json_data:
+    test_documents.append(item["full_text"])
+    test_expected_output.append(item["labels"])
 
-    # Print the predicted labels
-    predicted_labels = tf.argmax(predictions, axis=-1).numpy()
-    print("Predicted Labels:")
-    print(predicted_labels)
+# Preprocess test data
+encoded_test_labels = np.zeros((len(test_expected_output), max_input_len), dtype=np.int32)
+
+for index, item in enumerate(test_expected_output):
+    for i, label in enumerate(item):
+        test_expected_output[index][i] = label_to_index[label]
+
+# Tokenize test data
+tokenized_test_inputs = tokenizer(test_documents, padding=True, truncation=True, return_tensors='tf')
+
+# Evaluate the model on the test set
+test_loss, test_accuracy = model.evaluate(tokenized_test_inputs['input_ids'], encoded_test_labels, verbose=0)
+
+print(f"Test Loss: {test_loss}")
+print(f"Test Accuracy: {test_accuracy}")

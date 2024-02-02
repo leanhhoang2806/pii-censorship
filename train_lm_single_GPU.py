@@ -5,15 +5,18 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Embedding, LSTM, Bidirectional
 import json
 from tqdm import tqdm 
+import random
 
 # Load data
 with open("pii-detection-removal-from-educational-data/train.json") as file:
     json_data = json.load(file)
 
+sampled_data = random.sample(json_data, int(0.01 * len(json_data)))
 documents = []
 expected_output = []
 all_labels = set()
-for item in json_data:
+
+for item in sampled_data:
     documents.append(item["full_text"])
     expected_output.append(item["labels"])
     for i in item["labels"]:

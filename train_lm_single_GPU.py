@@ -4,6 +4,7 @@ from transformers import BertTokenizer
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Embedding, LSTM, Bidirectional
 import json
+from tqdm import tqdm 
 
 # Load data
 with open("pii-detection-removal-from-educational-data/train.json") as file:
@@ -32,7 +33,8 @@ neurons = 32
 dropout = 0.2
 output_categories = len(all_labels)
 
-strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
+# Using GPU, assuming TensorFlow is configured to use GPU
+strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
 
 with strategy.scope():
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -52,8 +54,29 @@ with strategy.scope():
     # Compile the model
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
-    # Train the model
-    model.fit(tokenized_inputs['input_ids'], encoded_labels, epochs=10, batch_size=1)
+    # Train the model with tqdm progress bar
+    epochs = 10
+    batch_size = 1
+    steps_per_epoch = len(tokenized_inputs['input_ids']) // batch_size
+
+    for epoch in range(epochs):
+        print(f"Epoch {epoch + 1}/{epochs}")
+        progress_bar = tqdm(total=steps_per_epoch, position=0, leave=True)  # Create tqdm progress bar
+
+        for step in range(steps_per_epoch):
+            start_idx = step * batch_size
+            end_idx = (step + 1) * batch_size
+            batch_inputs = tokenized_inputs['input_ids'][start_idx:end_idx]
+            batch_labels = encoded_labels[start_idx:end_idx]
+
+            # Training step
+            model.train_on_batch(batch_inputs, batch_labels)
+
+            # Update progress bar
+            progress_bar.update(1)
+            progress_bar.set_description(f"Batch {step}/{steps_per_epoch}")
+
+        progress_bar.close()
 
     # Print the summary of the model
     model.summary()

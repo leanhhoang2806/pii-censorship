@@ -11,4 +11,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD ["python", "train_lm.py"]
+CMD ["python", "train_lm_single_GPU.py"]

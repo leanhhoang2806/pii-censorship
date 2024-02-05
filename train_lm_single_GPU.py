@@ -28,7 +28,7 @@ for item in sampled_data:
     for i in item["labels"]:
         if i != 'O':
             all_labels.add(i)
-
+print(documents[0])
 label_to_index = {}
 
 for index, item in enumerate(list(all_labels)):

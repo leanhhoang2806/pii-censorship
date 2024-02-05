@@ -148,4 +148,3 @@ model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=
 
 # Train the model
 model.fit(tokenized_inputs['input_ids'], tokenized_labels['input_ids'], epochs=10, batch_size=1)
-

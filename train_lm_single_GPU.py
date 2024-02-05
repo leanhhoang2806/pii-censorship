@@ -106,60 +106,83 @@
 #     print(predicted_labels[0])
 
 
-from transformers import BertTokenizer, BertForTokenClassification
+from transformers import BertForTokenClassification, BertTokenizer, BertConfig
+from torch.utils.data import DataLoader
 from transformers import AdamW
-from torch.utils.data import TensorDataset, DataLoader
+from tqdm import tqdm
 import torch
+from torch.nn import CrossEntropyLoss
+from torch.nn import functional as F
 
-# Sample data
-sentences = [
-    "John Smith works at XYZ Corp.",
-    "New York City is located in the USA.",
-    # Add more sentences as needed
+# Define your labeled training data (replace this with your own dataset)
+training_data = [
+    {"sentence": "Apple Inc. is a technology company.", "labels": [0, 0, 0, 0, 1, 1, 1, 2]},
+    {"sentence": "Microsoft is based in Redmond.", "labels": [0, 0, 0, 1, 2, 2]},
+    # Add more labeled examples as needed
 ]
 
-labels = [
-    ["B-PER", "I-PER", "O", "O", "B-ORG", "I-ORG", "O"],
-    ["B-LOC", "I-LOC", "I-LOC", "O", "O", "O", "O", "B-LOC", "O"],
-    # Add more label sequences as needed
-]
+# Define the labels (replace these with your own labels)
+labels = ["O", "B-ORG", "I-ORG", "B-LOC", "I-LOC", "B-PER", "I-PER"]
 
-# Load pre-trained BERT tokenizer and model
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertForTokenClassification.from_pretrained('bert-base-uncased', num_labels=len(set(label for label_seq in labels for label in label_seq)))
+# Set up the tokenizer and model
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+model = BertForTokenClassification.from_pretrained(
+    "bert-base-uncased", num_labels=len(labels)
+)
 
-# Tokenize and encode the sentences and labels
-tokenized_inputs = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt')
-labels_encoded = [[model.config.label2id[label] for label in label_seq] for label_seq in labels]
+# Tokenize and prepare the training data
+tokenized_data = tokenizer(
+    [example["sentence"] for example in training_data],
+    truncation=True,
+    padding=True,
+    return_tensors="pt",
+    is_split_into_words=True,
+)
 
-# Convert to PyTorch tensors
-input_ids = tokenized_inputs['input_ids']
-attention_mask = tokenized_inputs['attention_mask']
-labels_tensor = torch.tensor(labels_encoded)
+# Extract labels and convert them to tensor
+labels_tensor = torch.tensor(
+    [example["labels"] for example in training_data], dtype=torch.long
+)
 
-# Create a DataLoader
-dataset = TensorDataset(input_ids, attention_mask, labels_tensor)
-dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+# Create a DataLoader for training
+train_dataset = torch.utils.data.TensorDataset(
+    tokenized_data["input_ids"],
+    tokenized_data["attention_mask"],
+    labels_tensor,
+)
 
-# Set up optimizer and loss function
+train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
+
+# Set up the optimizer and loss function
 optimizer = AdamW(model.parameters(), lr=5e-5)
-criterion = torch.nn.CrossEntropyLoss()
+loss_fn = CrossEntropyLoss(ignore_index=-100)  # Ignore padding index
 
 # Training loop
-epochs = 3
-for epoch in range(epochs):
-    for batch in dataloader:
-        input_ids_batch, attention_mask_batch, labels_batch = batch
+num_epochs = 3
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
 
-        # Forward pass
-        outputs = model(input_ids_batch, attention_mask=attention_mask_batch, labels=labels_batch)
-        loss = outputs.loss
+for epoch in range(num_epochs):
+    model.train()
+    total_loss = 0.0
+    for batch in tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs}"):
+        input_ids, attention_mask, labels = batch
+        input_ids, attention_mask, labels = (
+            input_ids.to(device),
+            attention_mask.to(device),
+            labels.to(device),
+        )
 
-        # Backward pass and optimization
         optimizer.zero_grad()
+
+        outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
+        loss = outputs.loss
+        total_loss += loss.item()
+
         loss.backward()
         optimizer.step()
 
-# Save or further use the trained model
-model.save_pretrained('ner_model')
+    average_loss = total_loss / len(train_dataloader)
+    print(f"Epoch {epoch + 1}/{num_epochs}, Average Loss: {average_loss}")
+
 

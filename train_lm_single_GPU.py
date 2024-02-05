@@ -135,7 +135,7 @@ num_classes = len(set(label for sublist in labels for label in sublist))
 label_tokenizer = tf.keras.preprocessing.text.Tokenizer()
 label_tokenizer.fit_on_texts([label for sublist in labels for label in sublist])
 encoded_labels = [label_tokenizer.texts_to_sequences(seq) for seq in labels]
-padded_labels = tf.keras.preprocessing.sequence.pad_sequences(encoded_labels, maxlen=max_len, padding='post')
+padded_labels = tf.keras.preprocessing.sequence.pad_sequences(encoded_labels, maxlen=max_len, padding='post', dtype=object)
 one_hot_labels = tf.keras.utils.to_categorical(padded_labels, num_classes=num_classes)
 
 # Build the model

@@ -70,7 +70,7 @@ with strategy.scope():
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
     # Train the model with tqdm progress bar
-    epochs = 3
+    epochs = 1
     batch_size = 1
     steps_per_epoch = len(tokenized_train_inputs['input_ids']) // batch_size
 
@@ -95,3 +95,23 @@ with strategy.scope():
 
     # Print the summary of the model
     model.summary()
+
+    # Tokenize test documents
+    tokenized_test_inputs = tokenizer(test_documents, padding=True, truncation=True, return_tensors='tf')
+
+    # Predict labels for the tokenized test documents
+    predicted_labels = model.predict(tokenized_test_inputs['input_ids'])
+
+    # Decode predicted labels to original format
+    decoded_predicted_labels = []
+    for predictions in predicted_labels:
+        decoded_labels = [np.argmax(pred) for pred in predictions]
+        decoded_predicted_labels.append(decoded_labels)
+
+    # Flatten the list for easier comparison with test_labels
+    decoded_predicted_labels = [label for sublist in decoded_predicted_labels for label in sublist]
+
+    print(decoded_predicted_labels[0])
+
+    # Evaluate the model on the test set
+    print("Classification Report:\n", classification_report(np.concatenate(test_labels), decoded_predicted_labels))

@@ -57,6 +57,8 @@ strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
 with strategy.scope():
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     tokenized_train_inputs = tokenizer(train_documents, padding=True, truncation=True, return_tensors='tf')
+    print("tokenized_train_inputs")
+    print(tokenized_train_inputs[0])
     max_input_len = tf.shape(tokenized_train_inputs['input_ids'])[1]
     input_shape = tokenized_train_inputs['input_ids'].shape
 

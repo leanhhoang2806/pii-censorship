@@ -121,9 +121,20 @@ tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 tokenized_inputs = tokenizer(texts, padding=True, truncation=True, return_tensors="tf")
 
 # Tokenize and encode labels
-tokenized_labels = tokenizer(labels, padding=True, truncation=True, return_tensors="tf", is_target=True)
+tokenized_labels = tokenizer.batch_encode_plus(
+    labels,
+    padding=True,
+    truncation=True,
+    return_tensors="tf",
+    is_target=True
+)
 
+# Extract relevant tensor from tokenized_labels
+tokenized_labels = {key: value[:, 1:-1] for key, value in tokenized_labels.items()}
+
+# Get the number of classes from the tokenizer
 num_classes = tokenizer.vocab_size
+
 # Build the model
 model = tf.keras.Sequential([
     tf.keras.layers.Input(shape=(None,), dtype=tf.int32),
@@ -137,3 +148,4 @@ model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=
 
 # Train the model
 model.fit(tokenized_inputs['input_ids'], tokenized_labels['input_ids'], epochs=10, batch_size=1)
+

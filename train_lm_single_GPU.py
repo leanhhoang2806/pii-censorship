@@ -106,45 +106,60 @@
 #     print(predicted_labels[0])
 
 
-from transformers import BertTokenizer
-import tensorflow as tf
+from transformers import BertTokenizer, BertForTokenClassification
+from transformers import AdamW
+from torch.utils.data import TensorDataset, DataLoader
+import torch
 
 # Sample data
-texts = ["John works at Google.", "Mary lives in New York City."]
-labels = [["B-person", "O", "O", "B-organization", "O"],
-          ["B-person", "O", "O", "B-location", "I-location", "I-location", "O"]]
+sentences = [
+    "John Smith works at XYZ Corp.",
+    "New York City is located in the USA.",
+    # Add more sentences as needed
+]
 
-# Load tokenizer
+labels = [
+    ["B-PER", "I-PER", "O", "O", "B-ORG", "I-ORG", "O"],
+    ["B-LOC", "I-LOC", "I-LOC", "O", "O", "O", "O", "B-LOC", "O"],
+    # Add more label sequences as needed
+]
+
+# Load pre-trained BERT tokenizer and model
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+model = BertForTokenClassification.from_pretrained('bert-base-uncased', num_labels=len(set(label for label_seq in labels for label in label_seq)))
 
-# Tokenize and encode text
-tokenized_inputs = tokenizer(texts, padding=True, truncation=True, return_tensors="tf")
+# Tokenize and encode the sentences and labels
+tokenized_inputs = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt')
+labels_encoded = [[model.config.label2id[label] for label in label_seq] for label_seq in labels]
 
-# Tokenize and encode labels
-tokenized_labels = tokenizer.batch_encode_plus(
-    labels,
-    padding=True,
-    truncation=True,
-    return_tensors="tf",
-    is_target=True
-)
+# Convert to PyTorch tensors
+input_ids = tokenized_inputs['input_ids']
+attention_mask = tokenized_inputs['attention_mask']
+labels_tensor = torch.tensor(labels_encoded)
 
-# Extract relevant tensor from tokenized_labels
-tokenized_labels = {key: value[:, 1:-1] for key, value in tokenized_labels.items()}
+# Create a DataLoader
+dataset = TensorDataset(input_ids, attention_mask, labels_tensor)
+dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 
-# Get the number of classes from the tokenizer
-num_classes = tokenizer.vocab_size
+# Set up optimizer and loss function
+optimizer = AdamW(model.parameters(), lr=5e-5)
+criterion = torch.nn.CrossEntropyLoss()
 
-# Build the model
-model = tf.keras.Sequential([
-    tf.keras.layers.Input(shape=(None,), dtype=tf.int32),
-    tf.keras.layers.Embedding(input_dim=tokenizer.vocab_size, output_dim=16, mask_zero=True),
-    tf.keras.layers.LSTM(100, return_sequences=True),
-    tf.keras.layers.Dense(num_classes, activation='softmax')
-])
+# Training loop
+epochs = 3
+for epoch in range(epochs):
+    for batch in dataloader:
+        input_ids_batch, attention_mask_batch, labels_batch = batch
 
-# Compile the model
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+        # Forward pass
+        outputs = model(input_ids_batch, attention_mask=attention_mask_batch, labels=labels_batch)
+        loss = outputs.loss
 
-# Train the model
-model.fit(tokenized_inputs['input_ids'], tokenized_labels['input_ids'], epochs=10, batch_size=1)
+        # Backward pass and optimization
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+# Save or further use the trained model
+model.save_pretrained('ner_model')
+

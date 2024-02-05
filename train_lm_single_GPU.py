@@ -44,15 +44,6 @@ train_documents, test_documents, train_labels, test_labels = train_test_split(
     documents, expected_output, test_size=0.2, random_state=42
 )
 
-print(train_documents[0])
-print("====================")
-print(train_labels[0])
-print("====================")
-print(test_documents[0])
-print("====================")
-print(test_labels[0])
-
-
 neurons = 32
 dropout = 0.2
 output_categories = len(label_to_index)
@@ -117,7 +108,6 @@ with strategy.scope():
         max_value_index = np.argmax(pred_array, axis=1)
         predicted_labels_id.append(max_value_index.tolist())
 
-    print(predicted_labels_id[0])
 
     from sklearn.metrics import classification_report
 

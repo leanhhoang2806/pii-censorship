@@ -118,3 +118,12 @@ with strategy.scope():
         predicted_labels_id.append(max_value_index.tolist())
 
     print(predicted_labels_id[0])
+
+    from sklearn.metrics import classification_report
+
+    # Converting predicted labels ids to make it flat because the classification report 
+    # expects a 1d y_pred and y_true.
+    predicted_labels_1d = [label for prediction in predicted_labels_id for label in prediction]
+    test_labels_1d = [label for labels in test_labels for label in labels]
+
+    print(classification_report(test_labels_1d, predicted_labels_1d, digits=4))

@@ -105,7 +105,8 @@ with strategy.scope():
 
     for i, labels in enumerate(test_labels):
         for j, label in enumerate(labels):
-            encoded_test_labels[i][j] = label
+            if j < max_input_len:  # Ensure not to cross the maximum allowed length
+                encoded_test_labels[i][j] = label
 
     # Predict labels for the tokenized test documents
     predicted_labels = model.predict(tokenized_test_inputs['input_ids'])

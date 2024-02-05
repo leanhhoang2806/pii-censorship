@@ -46,6 +46,7 @@ train_documents, test_documents, train_labels, test_labels = train_test_split(
 neurons = 32
 dropout = 0.2
 output_categories = len(all_labels)
+print(f"output_categories: {output_categories}")
 
 # Using GPU, assuming TensorFlow is configured to use GPU
 strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
@@ -100,9 +101,6 @@ with strategy.scope():
 
     # Predict labels for the tokenized test documents
     predicted_labels = model.predict(tokenized_test_inputs['input_ids'])
-    rounded_predictions = np.round(predicted_labels).astype(int)
     print(test_labels[0])
     print("================")
     print(predicted_labels[0])
-    print("================")
-    print(rounded_predictions[0])

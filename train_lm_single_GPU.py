@@ -66,12 +66,8 @@ with strategy.scope():
     max_input_len = tf.shape(tokenized_train_inputs['input_ids'])[1]
     input_shape = tokenized_train_inputs['input_ids'].shape
 
+    # Encode labels to match the model's output shape
     encoded_train_labels = np.zeros((len(train_labels), max_input_len), dtype=np.int32)
-
-    for i, labels in enumerate(train_labels):
-        for j, label in enumerate(labels):
-            encoded_train_labels[i, j] = label
-
     
     model = Sequential([
         Embedding(input_dim=tokenizer.vocab_size, output_dim=neurons, input_shape=(input_shape[1],)),
@@ -114,6 +110,11 @@ with strategy.scope():
 
     # Predict labels for the tokenized test documents
     predicted_labels = model.predict(tokenized_test_inputs['input_ids'])
-    print(test_labels[0])
-    print("================")
-    print(predicted_labels[0])
+    # Transform model's output to label id
+    predicted_labels_id = []
+
+    for pred_array in predicted_labels:
+        max_value_index = np.argmax(pred_array, axis=1)
+        predicted_labels_id.append(max_value_index.tolist())
+
+    print(predicted_labels_id[0])

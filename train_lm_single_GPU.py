@@ -38,7 +38,6 @@ for item in expected_output:
     for index, i in enumerate(item):
         item[index] = label_to_index[i]
 
-print(expected_output[0])
 # Split the data into train and test sets
 train_documents, test_documents, train_labels, test_labels = train_test_split(
     documents, expected_output, test_size=0.2, random_state=42
@@ -102,16 +101,4 @@ with strategy.scope():
     # Predict labels for the tokenized test documents
     predicted_labels = model.predict(tokenized_test_inputs['input_ids'])
 
-    # Decode predicted labels to original format
-    decoded_predicted_labels = []
-    for predictions in predicted_labels:
-        decoded_labels = [np.argmax(pred) for pred in predictions]
-        decoded_predicted_labels.append(decoded_labels)
-
-    # Flatten the list for easier comparison with test_labels
-    decoded_predicted_labels = [label for sublist in decoded_predicted_labels for label in sublist]
-
-    print(decoded_predicted_labels[0])
-
-    # Evaluate the model on the test set
-    print("Classification Report:\n", classification_report(np.concatenate(test_labels), decoded_predicted_labels))
+    print(predicted_labels[0])

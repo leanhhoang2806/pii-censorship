@@ -100,5 +100,6 @@ with strategy.scope():
 
     # Predict labels for the tokenized test documents
     predicted_labels = model.predict(tokenized_test_inputs['input_ids'])
+    rounded_predictions = np.round(predicted_labels).astype(int)
 
-    print(predicted_labels[0])
+    print(rounded_predictions[0])

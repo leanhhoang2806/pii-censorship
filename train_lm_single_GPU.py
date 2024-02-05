@@ -28,8 +28,7 @@ for item in sampled_data:
     for i in item["labels"]:
         if i != 'O':
             all_labels.add(i)
-print(documents[0])
-print(expected_output[0])
+all_data = zip(documents, expected_output)
 label_to_index = {}
 
 for index, item in enumerate(list(all_labels)):
@@ -64,7 +63,7 @@ with strategy.scope():
     model = Sequential([
         Embedding(input_dim=tokenizer.vocab_size, output_dim=neurons, input_shape=(input_shape[1],)),
         Bidirectional(LSTM(neurons*2, return_sequences=True, dropout=dropout, recurrent_dropout=dropout, implementation=2)),
-        Dense(output_categories, activation='softmax')
+        Dense(1, activation='softmax')
     ])
 
     # Compile the model with class weights

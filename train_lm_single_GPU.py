@@ -48,8 +48,6 @@ train_documents, test_documents, train_labels, test_labels = train_test_split(
 neurons = 32
 dropout = 0.2
 output_categories = len(label_to_index)
-print(f"output_categories: {output_categories}")
-print(f"label to index: {label_to_index}")
 
 # Using GPU, assuming TensorFlow is configured to use GPU
 strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
@@ -57,8 +55,6 @@ strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
 with strategy.scope():
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     tokenized_train_inputs = tokenizer(train_documents, padding=True, truncation=True, return_tensors='tf')
-    print("tokenized_train_inputs")
-    print(tokenized_train_inputs[0])
     max_input_len = tf.shape(tokenized_train_inputs['input_ids'])[1]
     input_shape = tokenized_train_inputs['input_ids'].shape
 

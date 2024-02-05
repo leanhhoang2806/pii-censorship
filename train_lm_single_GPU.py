@@ -66,8 +66,12 @@ with strategy.scope():
     max_input_len = tf.shape(tokenized_train_inputs['input_ids'])[1]
     input_shape = tokenized_train_inputs['input_ids'].shape
 
-    # Encode labels to match the model's output shape
     encoded_train_labels = np.zeros((len(train_labels), max_input_len), dtype=np.int32)
+
+    for i, labels in enumerate(train_labels):
+        for j, label in enumerate(labels):
+            encoded_train_labels[i, j] = label
+
     
     model = Sequential([
         Embedding(input_dim=tokenizer.vocab_size, output_dim=neurons, input_shape=(input_shape[1],)),

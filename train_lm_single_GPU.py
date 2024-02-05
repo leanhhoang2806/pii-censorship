@@ -114,4 +114,9 @@ with strategy.scope():
     predicted_labels_1d = [label for prediction in predicted_labels_id for label in prediction]
     test_labels_1d = [label for labels in test_labels for label in labels]
 
+
+    # Padding test_labels
+    test_labels_padded = pad_sequences(test_labels, maxlen=max_input_len, padding="post")
+    test_labels_padded_1d = [label for labels in test_labels_padded for label in labels]
+
     print(classification_report(test_labels_1d, predicted_labels_1d, digits=4))

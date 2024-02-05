@@ -30,6 +30,7 @@ for item in sampled_data:
             all_labels.add(i)
 
 label_to_index = {}
+
 for index, item in enumerate(list(all_labels)):
     label_to_index[item] = index + 1
 
@@ -45,8 +46,9 @@ train_documents, test_documents, train_labels, test_labels = train_test_split(
 
 neurons = 32
 dropout = 0.2
-output_categories = len(all_labels)
+output_categories = len(label_to_index)
 print(f"output_categories: {output_categories}")
+print(f"label to index: {label_to_index}")
 
 # Using GPU, assuming TensorFlow is configured to use GPU
 strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")

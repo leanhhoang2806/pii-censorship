@@ -105,7 +105,6 @@
 #     print("================")
 #     print(predicted_labels[0])
 
-
 from transformers import BertForTokenClassification, BertTokenizer, BertConfig
 from torch.utils.data import DataLoader
 from transformers import AdamW
@@ -143,46 +142,3 @@ tokenized_data = tokenizer(
 labels_tensor = torch.tensor(
     [example["labels"] for example in training_data], dtype=torch.long
 )
-
-# Create a DataLoader for training
-train_dataset = torch.utils.data.TensorDataset(
-    tokenized_data["input_ids"],
-    tokenized_data["attention_mask"],
-    labels_tensor,
-)
-
-train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
-
-# Set up the optimizer and loss function
-optimizer = AdamW(model.parameters(), lr=5e-5)
-loss_fn = CrossEntropyLoss(ignore_index=-100)  # Ignore padding index
-
-# Training loop
-num_epochs = 3
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
-
-for epoch in range(num_epochs):
-    model.train()
-    total_loss = 0.0
-    for batch in tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs}"):
-        input_ids, attention_mask, labels = batch
-        input_ids, attention_mask, labels = (
-            input_ids.to(device),
-            attention_mask.to(device),
-            labels.to(device),
-        )
-
-        optimizer.zero_grad()
-
-        outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
-        loss = outputs.loss
-        total_loss += loss.item()
-
-        loss.backward()
-        optimizer.step()
-
-    average_loss = total_loss / len(train_dataloader)
-    print(f"Epoch {epoch + 1}/{num_epochs}, Average Loss: {average_loss}")
-
-

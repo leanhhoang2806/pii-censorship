@@ -8,6 +8,7 @@ from sklearn.metrics import classification_report
 import json
 from tqdm import tqdm 
 import random
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # Load data
 with open("pii-detection-removal-from-educational-data/train.json") as file:
@@ -107,9 +108,6 @@ with strategy.scope():
     for pred_array in predicted_labels:
         max_value_index = np.argmax(pred_array, axis=1)
         predicted_labels_id.append(max_value_index.tolist())
-
-
-    from sklearn.metrics import classification_report
 
     # Converting predicted labels ids to make it flat because the classification report 
     # expects a 1d y_pred and y_true.

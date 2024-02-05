@@ -106,59 +106,34 @@
 #     print(predicted_labels[0])
 
 
-import numpy as np
+from transformers import BertTokenizer
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Embedding, LSTM, Dense
 
 # Sample data
 texts = ["John works at Google.", "Mary lives in New York City."]
-
-# Labels for entity recognition (B: beginning, I: inside, O: outside)
 labels = [["B-person", "O", "O", "B-organization", "O"],
           ["B-person", "O", "O", "B-location", "I-location", "I-location", "O"]]
 
-# Tokenize the text
-tokenizer = tf.keras.preprocessing.text.Tokenizer()
-tokenizer.fit_on_texts(texts)
-word_index = tokenizer.word_index
+# Load tokenizer
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-# Convert text to sequences of numbers
-sequences = tokenizer.texts_to_sequences(texts)
+# Tokenize and encode text
+tokenized_inputs = tokenizer(texts, padding=True, truncation=True, return_tensors="tf")
 
-# Pad sequences to ensure equal length
-max_len = max(len(seq) for seq in sequences)
-padded_sequences = tf.keras.preprocessing.sequence.pad_sequences(sequences, maxlen=max_len, padding='post')
+# Tokenize and encode labels
+tokenized_labels = tokenizer(labels, padding=True, truncation=True, return_tensors="tf", is_target=True)
 
-# Convert labels to one-hot encoding
-num_classes = len(set(label for sublist in labels for label in sublist))
-label_tokenizer = tf.keras.preprocessing.text.Tokenizer()
-label_tokenizer.fit_on_texts([label for sublist in labels for label in sublist])
-encoded_labels = [label_tokenizer.texts_to_sequences(seq) for seq in labels]
-padded_labels = tf.keras.preprocessing.sequence.pad_sequences(encoded_labels, maxlen=max_len, padding='post', dtype=object)
-one_hot_labels = tf.keras.utils.to_categorical(padded_labels, num_classes=num_classes)
-
+num_classes = tokenizer.vocab_size
 # Build the model
-embedding_dim = 16
-model = Sequential([
-    Embedding(input_dim=len(word_index) + 1, output_dim=embedding_dim, input_length=max_len),
-    LSTM(100, return_sequences=True),
-    Dense(num_classes, activation='softmax')
+model = tf.keras.Sequential([
+    tf.keras.layers.Input(shape=(None,), dtype=tf.int32),
+    tf.keras.layers.Embedding(input_dim=tokenizer.vocab_size, output_dim=16, mask_zero=True),
+    tf.keras.layers.LSTM(100, return_sequences=True),
+    tf.keras.layers.Dense(num_classes, activation='softmax')
 ])
 
 # Compile the model
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
 # Train the model
-model.fit(padded_sequences, one_hot_labels, epochs=10, batch_size=1)
-
-# Example prediction on new data
-new_text = ["Steve is the CEO of Apple."]
-new_sequence = tokenizer.texts_to_sequences(new_text)
-padded_new_sequence = tf.keras.preprocessing.sequence.pad_sequences(new_sequence, maxlen=max_len, padding='post')
-predictions = model.predict(padded_new_sequence)
-
-# Convert predictions to labels
-predicted_labels = [label_tokenizer.index_word[np.argmax(pred)] for pred in predictions[0]]
-
-print(f"Predicted labels: {predicted_labels}")
+model.fit(tokenized_inputs['input_ids'], tokenized_labels['input_ids'], epochs=10, batch_size=1)

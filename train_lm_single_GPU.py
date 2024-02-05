@@ -100,6 +100,13 @@ with strategy.scope():
     # Tokenize test documents
     tokenized_test_inputs = tokenizer(test_documents, padding=True, truncation=True, return_tensors='tf')
 
+    # Encode test labels to match the model's output shape
+    encoded_test_labels = np.zeros((len(test_labels), max_input_len), dtype=np.int32)
+
+    for i, labels in enumerate(test_labels):
+        for j, label in enumerate(labels):
+            encoded_test_labels[i][j] = label
+
     # Predict labels for the tokenized test documents
     predicted_labels = model.predict(tokenized_test_inputs['input_ids'])
     # Transform model's output to label id
@@ -113,10 +120,5 @@ with strategy.scope():
     # expects a 1d y_pred and y_true.
     predicted_labels_1d = [label for prediction in predicted_labels_id for label in prediction]
     test_labels_1d = [label for labels in test_labels for label in labels]
-
-
-    # Padding test_labels
-    test_labels_padded = pad_sequences(test_labels, maxlen=max_input_len, padding="post")
-    test_labels_padded_1d = [label for labels in test_labels_padded for label in labels]
 
     print(classification_report(test_labels_1d, predicted_labels_1d, digits=4))

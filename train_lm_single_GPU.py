@@ -28,7 +28,7 @@ single_GPU = True
 
 
 if is_small_sample:
-    small_sample = 0.01
+    small_sample = 0.1
 else:
     small_sample = 1
 # Sample a portion of the data for faster testing

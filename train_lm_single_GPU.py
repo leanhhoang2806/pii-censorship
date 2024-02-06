@@ -154,16 +154,13 @@ with strategy.scope():
 
     # Predict labels for the tokenized test documents
     predicted_labels = model.predict(tokenized_test_inputs["input_ids"])
-    print("predicted_labels")
-    print(predicted_labels[0])
-    print("test labels")
-    print( test_labels[0])
     # Transform model's output to label id
     predicted_labels_id = []
 
     for pred_array in predicted_labels:
         max_value_index = np.argmax(pred_array, axis=1)
         predicted_labels_id.append(max_value_index.tolist())
+
 
     # Converting predicted labels ids to make it flat because the classification report
     # expects a 1d y_pred and y_true.
@@ -178,7 +175,7 @@ with strategy.scope():
 
     # Flatten the test_labels without padding
     test_labels_1d_flat = [
-        label for labels in test_labels for label in labels if label != 0
+        label for labels in test_labels for label in labels
     ]
     print("test_labels_1d_flat")
     print(len(test_labels_1d_flat))

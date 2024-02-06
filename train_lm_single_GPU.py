@@ -61,6 +61,7 @@ for item in expected_output:
 train_documents, test_documents, train_labels, test_labels = train_test_split(
     documents, expected_output, test_size=0.2, random_state=42
 )
+print(f"len of  test_documents: {test_documents.shape}, len of test_labels: {test_labels.shape}")
 
 neurons = 32
 dropout = 0.2

@@ -160,8 +160,9 @@ with strategy.scope():
         max_value_index = np.argmax(pred_array, axis=1)
         predicted_labels_id.append(max_value_index.tolist())
 
-    print(f"test documents length: {len(test_documents)}")
-    print(f"predicte_labels length: {len(predicted_labels)}")
+    assert len(test_documents) == len(predicted_labels)
+    print(predicted_labels[0])
+    print(test_labels[0])
 
     # Converting predicted labels ids to make it flat because the classification report
     # expects a 1d y_pred and y_true.

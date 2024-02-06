@@ -166,13 +166,15 @@ with strategy.scope():
         label for prediction in predicted_labels_id for label in prediction
     ]
 
-    print(predicted_labels_1d_flat[:20])
+    print("predicted_labels_1d_flat")
+    print(predicted_labels_1d_flat[:5])
 
     # Flatten the test_labels without padding
     test_labels_1d_flat = [
         label for labels in test_labels for label in labels if label != 0
     ]
-    print(test_labels_1d_flat[:20])
+    print("test_labels_1d_flat")
+    print(test_labels_1d_flat[:5])
 
     # Make sure the lengths are the same
     min_length = min(len(predicted_labels_1d_flat), len(test_labels_1d_flat))
@@ -186,11 +188,11 @@ with strategy.scope():
     )
 
     # Print three samples of text, true labels, and predicted labels
-    for i in range(3):
+    # for i in range(3):
     #     print(f"Sample {i + 1}")
     #     print("Text:", test_documents[i])
-        print("True Labels:", test_labels[i])
-        print("Predicted Labels:", predicted_labels_id[i])
-        print(predicted_labels_1d[i])
-        print("\n")
+        # print("True Labels:", test_labels[i])
+        # print("Predicted Labels:", predicted_labels_id[i])
+        # print(predicted_labels_1d[i])
+        # print("\n")
 

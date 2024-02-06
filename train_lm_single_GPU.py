@@ -71,7 +71,7 @@ with strategy.scope():
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
     # Train the model with tqdm progress bar
-    epochs = 1
+    epochs = 10
     batch_size = 1
     steps_per_epoch = len(tokenized_train_inputs['input_ids']) // batch_size
 

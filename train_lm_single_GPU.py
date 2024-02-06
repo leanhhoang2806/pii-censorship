@@ -125,7 +125,15 @@ with strategy.scope():
 
     # Converting predicted labels ids to make it flat because the classification report 
     # expects a 1d y_pred and y_true.
-    predicted_labels_1d = [label for prediction in predicted_labels_id for label in prediction]
-    test_labels_1d = [label for labels in test_labels for label in labels]
+    predicted_labels_1d_flat = [label for prediction in predicted_labels_id for label in prediction]
+
+    # Flatten the test_labels without padding
+    test_labels_1d_flat = [label for labels in test_labels for label in labels if label != 0]
+
+    # Make sure the lengths are the same
+    min_length = min(len(predicted_labels_1d_flat), len(test_labels_1d_flat))
+    predicted_labels_1d = predicted_labels_1d_flat[:min_length]
+    test_labels_1d = test_labels_1d_flat[:min_length]
+
 
     print(classification_report(test_labels_1d, predicted_labels_1d, digits=4))

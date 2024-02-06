@@ -160,9 +160,10 @@ with strategy.scope():
         max_value_index = np.argmax(pred_array, axis=1)
         predicted_labels_id.append(max_value_index.tolist())
 
+    # check for data consistency
     assert len(test_documents) == len(predicted_labels)
-    print(predicted_labels_id)
-    print(test_labels)
+    for i in range(len(predicted_labels_id)):
+        assert len(predicted_labels_id[i]) == len(test_labels[i])
 
     # Converting predicted labels ids to make it flat because the classification report
     # expects a 1d y_pred and y_true.
@@ -175,14 +176,9 @@ with strategy.scope():
         label for labels in test_labels for label in labels
     ]
 
-    # Make sure the lengths are the same
-    min_length = min(len(predicted_labels_1d_flat), len(test_labels_1d_flat))
-    predicted_labels_1d = predicted_labels_1d_flat[:min_length]
-    test_labels_1d = test_labels_1d_flat[:min_length]
-
     print(
         classification_report(
-            test_labels_1d, predicted_labels_1d, digits=4, zero_division=1
+            test_labels_1d_flat, predicted_labels_1d_flat, digits=4, zero_division=1
         )
     )
 

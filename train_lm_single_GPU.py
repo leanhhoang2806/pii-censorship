@@ -161,7 +161,9 @@ with strategy.scope():
         predicted_labels_id.append(max_value_index.tolist())
 
     # check for data consistency
-    assert len(test_documents) == len(predicted_labels)
+    assert len(test_documents) == len(predicted_labels_id)
+    print(test_labels)
+    print(predicted_labels_id)
     for i in range(len(predicted_labels_id)):
         assert len(predicted_labels_id[i]) == len(test_labels[i])
 

@@ -219,7 +219,7 @@ with strategy.scope():
     for i in range(3):
     #     print(f"Sample {i + 1}")
     #     print("Text:", test_documents[i])
-    #     print("True Labels:", test_labels[i])
+        print("True Labels:", test_labels[i])
         print("Predicted Labels:", predicted_labels_id[i])
         print(predicted_labels_1d[i])
         print("\n")

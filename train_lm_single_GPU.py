@@ -227,3 +227,8 @@ with strategy.scope():
 
     print(test_labels_1d[:10])
     print(predicted_labels_1d[:10])
+    count = 0
+    for i in range(len(test_labels_1d)):
+        if test_labels_1d[i] == predicted_labels_1d[i]: count += 1
+
+    print(count / len(test_labels_1d))

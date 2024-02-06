@@ -229,4 +229,4 @@ with strategy.scope():
     for i in range(len(test_labels_1d)):
         if test_labels_1d[i] == predicted_labels_1d[i]: count += 1
     print(f"total count: {count}")
-    print(count / len(test_labels_1d))
+    print(f"Percentage accuracy: {count / len(test_labels_1d)}")

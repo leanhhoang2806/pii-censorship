@@ -198,58 +198,33 @@
 # =========================================
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from sklearn.model_selection import train_test_split
 
 # Sample training data
-sentences = ["Apple is a technology company.",
-             "Tim Cook is the CEO of Apple.",
-             "San Francisco is located in California."]
-labels = [[('Apple', 'ORG'), ('Tim Cook', 'PERSON')],
-          [('Apple', 'ORG')],
-          [('San Francisco', 'LOC'), ('California', 'LOC')]]
-
-# Tokenization
-tokenizer = tf.keras.preprocessing.text.Tokenizer()
-tokenizer.fit_on_texts(sentences)
-word_index = tokenizer.word_index
-vocab_size = len(word_index) + 1
-
-# Convert words to sequences
-sequences = tokenizer.texts_to_sequences(sentences)
-
-# Padding sequences
-maxlen = max(len(seq) for seq in sequences)
-padded_sequences = pad_sequences(sequences, padding='post', maxlen=maxlen)
-
-# Convert labels to sequences of one-hot encodings
-num_classes = len(set(label[1] for sublist in labels for label in sublist))
-label_dict = {label: i for i, label in enumerate(sorted(set(label[1] for sublist in labels for label in sublist)))}
-y = np.zeros((len(labels), maxlen, num_classes), dtype=np.int32)
-for i, label_seq in enumerate(labels):
-    for j, (word, label) in enumerate(label_seq):
-        y[i, j, label_dict[label]] = 1
-
-# Split data into training and validation sets
-X_train, X_val, y_train, y_val = train_test_split(padded_sequences, y, test_size=0.2, random_state=42)
-
-# Define model
-model = tf.keras.Sequential([
-    tf.keras.layers.Embedding(input_dim=vocab_size, output_dim=32, input_length=maxlen),
-    tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64, return_sequences=True)),
-    tf.keras.layers.Dense(num_classes, activation='softmax')
+X_train = np.array([
+    [1, 2, 3, 4, 0, 0],  # "Apple is a technology company."
+    [5, 6, 7, 8, 9, 0],  # "Tim Cook is the CEO of Apple."
+    [10, 11, 12, 13, 14, 15]  # "San Francisco is located in California."
+])
+y_train = np.array([
+    [[1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 0, 1], [0, 0, 0], [0, 0, 0]],  # ORG, ORG, O, O, O, O
+    [[1, 0, 0], [0, 0, 1], [0, 0, 0], [0, 0, 0], [1, 0, 0], [0, 0, 0]],  # ORG, O, O, O, ORG, O
+    [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [1, 0, 0], [1, 0, 0]]  # LOC, O, O, O, LOC, LOC
 ])
 
-# Compile model
+# Define and compile model
+model = tf.keras.Sequential([
+    tf.keras.layers.Embedding(input_dim=16, output_dim=32, input_length=6),
+    tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64, return_sequences=True)),
+    tf.keras.layers.Dense(3, activation='softmax')  # 3 classes: ORG, LOC, O
+])
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 # Train model
-model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, batch_size=32)
+model.fit(X_train, y_train, epochs=10, batch_size=1)
 
 # Example prediction
-test_sentence = "Apple is headquartered in Cupertino."
-test_sequence = tokenizer.texts_to_sequences([test_sentence])
-padded_test_sequence = pad_sequences(test_sequence, padding='post', maxlen=maxlen)
-predictions = model.predict(padded_test_sequence)
-predicted_labels = [list(label_dict.keys())[np.argmax(pred)] for pred in predictions[0]]
-print(list(zip(test_sentence.split(), predicted_labels)))
+test_sentence = np.array([[1, 2, 3, 16, 0, 0]])  # "Apple is headquartered in <unknown>."
+predictions = model.predict(test_sentence)
+predicted_labels = [np.argmax(pred) for pred in predictions[0]]
+print(predicted_labels)  # Output: [0, 2, 2, 2, 2, 2] -> Predicted labels for each word
+

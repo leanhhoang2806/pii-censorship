@@ -161,7 +161,7 @@ with strategy.scope():
         predicted_labels_id.append(max_value_index.tolist())
 
     assert len(test_documents) == len(predicted_labels)
-    print(predicted_labels)
+    print(predicted_labels_id)
     print(test_labels)
 
     # Converting predicted labels ids to make it flat because the classification report

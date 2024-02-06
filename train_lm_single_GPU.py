@@ -143,3 +143,11 @@ with strategy.scope():
     # Print classification report for filtered data
     print(classification_report(filtered_truths, filtered_predictions, digits=4, zero_division=1))
 
+
+    # Print three samples of text, true labels, and predicted labels
+    for i in range(3):
+        print(f"Sample {i + 1}")
+        print("Text:", test_documents[i])
+        print("True Labels:", test_labels[i])
+        print("Predicted Labels:", predicted_labels_id[i])
+        print("\n")

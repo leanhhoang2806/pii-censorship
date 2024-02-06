@@ -19,7 +19,7 @@ with open("pii-detection-removal-from-educational-data/train.json") as file:
 # real training: is_small_sample = False, single_GPU = False
 small_sample = None
 strategy = None
-epochs = 5
+epochs = 1
 batch_size = 1
 
 
@@ -28,7 +28,7 @@ single_GPU = True
 
 
 if is_small_sample:
-    small_sample = 0.3
+    small_sample = 0.01
 else:
     small_sample = 1
 # Sample a portion of the data for faster testing
@@ -140,8 +140,6 @@ with strategy.scope():
         test_documents, padding=True, truncation=True, return_tensors="tf"
     )
 
-    # Encode test labels to match the model's output shape
-    # Encode test labels to match the model's output shape
     encoded_test_labels = np.zeros((len(test_labels), max_input_len), dtype=np.int32)
 
     for i, labels in enumerate(test_labels):
@@ -218,12 +216,12 @@ with strategy.scope():
     print("Accuracy (Unfiltered):", accuracy_unfiltered)
 
     # Print three samples of text, true labels, and predicted labels
-    # for i in range(3):
+    for i in range(3):
     #     print(f"Sample {i + 1}")
     #     print("Text:", test_documents[i])
     #     print("True Labels:", test_labels[i])
-    #     print("Predicted Labels:", predicted_labels_id[i])
-    #     print("\n")
+        print("Predicted Labels:", predicted_labels_id[i])
+        print("\n")
 
     count = 0
     count_0 = 0
@@ -231,6 +229,5 @@ with strategy.scope():
         if test_labels_1d[i] == predicted_labels_1d[i]: count += 1
         if predicted_labels_1d[i] == 0:
             count_0 += 1
-            print(f"predicted_labels_1d: {predicted_labels_1d[i]}, test_labels: {test_labels_1d[i]} ")
     print(f"total count: {count}")
     print(f"Percentage accuracy: {count / len(test_labels_1d)}")

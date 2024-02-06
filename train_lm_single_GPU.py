@@ -154,6 +154,10 @@ with strategy.scope():
 
     # Predict labels for the tokenized test documents
     predicted_labels = model.predict(tokenized_test_inputs["input_ids"])
+    print("predicted_labels")
+    print(predicted_labels[0])
+    print("test labels")
+    print( test_labels[0])
     # Transform model's output to label id
     predicted_labels_id = []
 
@@ -199,4 +203,3 @@ with strategy.scope():
         # print("Predicted Labels:", predicted_labels_id[i])
         # print(predicted_labels_1d[i])
         # print("\n")
-

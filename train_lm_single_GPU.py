@@ -136,4 +136,10 @@ with strategy.scope():
     test_labels_1d = test_labels_1d_flat[:min_length]
 
 
-    print(classification_report(test_labels_1d, predicted_labels_1d, digits=4, zero_division=1))
+    # Filter out instances where both predicted and true labels are 0
+    filtered_predictions = [pred for pred, true in zip(predicted_labels_1d, test_labels_1d) if pred != 0 or true != 0]
+    filtered_truths = [true for true in test_labels_1d if true != 0]
+
+    # Print classification report for filtered data
+    print(classification_report(filtered_truths, filtered_predictions, digits=4, zero_division=1))
+

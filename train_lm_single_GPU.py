@@ -133,7 +133,7 @@ with strategy.scope():
         progress_bar.close()
 
     # Print the summary of the model
-    model.summary()
+    # model.summary()
 
     # Tokenize test documents
     tokenized_test_inputs = tokenizer(
@@ -166,54 +166,24 @@ with strategy.scope():
         label for prediction in predicted_labels_id for label in prediction
     ]
 
+    print(predicted_labels_1d_flat[:20])
+
     # Flatten the test_labels without padding
     test_labels_1d_flat = [
         label for labels in test_labels for label in labels if label != 0
     ]
+    print(test_labels_1d_flat[:20])
 
     # Make sure the lengths are the same
     min_length = min(len(predicted_labels_1d_flat), len(test_labels_1d_flat))
     predicted_labels_1d = predicted_labels_1d_flat[:min_length]
     test_labels_1d = test_labels_1d_flat[:min_length]
 
-    # Filter out instances where both predicted and true labels are 0
-    filtered_predictions = [
-        pred
-        for pred, true in zip(predicted_labels_1d, test_labels_1d)
-        if pred != 0 or true != 0
-    ]
-    filtered_truths = [true for true in test_labels_1d if true != 0]
-
-    # Print classification report for filtered data
-    print(
-        classification_report(
-            filtered_truths, filtered_predictions, digits=4, zero_division=1
-        )
-    )
-
-    print("For unfiltered report ")
-    # Print classification report for unfiltered data
     print(
         classification_report(
             test_labels_1d, predicted_labels_1d, digits=4, zero_division=1
         )
     )
-
-    print("calculate accuracy manually")
-    # Calculate accuracy for unfiltered data
-    correct_predictions = sum(
-        1
-        for pred, true in zip(predicted_labels_1d, test_labels_1d)
-        if pred == true and pred != 0
-    )
-    total_predictions = sum(
-        1 for pred in predicted_labels_1d if pred != 0
-    )  # Exclude instances where predicted label is 0
-    accuracy_unfiltered = (
-        correct_predictions / total_predictions if total_predictions != 0 else 0
-    )
-
-    print("Accuracy (Unfiltered):", accuracy_unfiltered)
 
     # Print three samples of text, true labels, and predicted labels
     for i in range(3):
@@ -224,11 +194,3 @@ with strategy.scope():
         print(predicted_labels_1d[i])
         print("\n")
 
-    count = 0
-    count_0 = 0
-    for i in range(len(test_labels_1d)):
-        if test_labels_1d[i] == predicted_labels_1d[i]: count += 1
-        if predicted_labels_1d[i] == 0:
-            count_0 += 1
-    print(f"total count: {count}")
-    print(f"Percentage accuracy: {count / len(test_labels_1d)}")

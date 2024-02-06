@@ -28,7 +28,7 @@ single_GPU = True
 
 
 if is_small_sample:
-    small_sample = 0.01
+    small_sample = 0.001
 else:
     small_sample = 1
 # Sample a portion of the data for faster testing
@@ -136,7 +136,6 @@ with strategy.scope():
     # model.summary()
 
     # Tokenize test documents
-    print(test_documents[0])
     tokenized_test_inputs = tokenizer(
         test_documents, padding=True, truncation=True, return_tensors="tf"
     )
@@ -161,6 +160,7 @@ with strategy.scope():
         max_value_index = np.argmax(pred_array, axis=1)
         predicted_labels_id.append(max_value_index.tolist())
 
+    print(f"predicte_labels length: {len(predicted_labels)}")
 
     # Converting predicted labels ids to make it flat because the classification report
     # expects a 1d y_pred and y_true.
@@ -168,18 +168,10 @@ with strategy.scope():
         label for prediction in predicted_labels_id for label in prediction
     ]
 
-    print("\n")
-    print("predicted_labels_1d_flat")
-    print(len(predicted_labels_1d_flat))
-    print(predicted_labels_1d_flat[:5])
-
     # Flatten the test_labels without padding
     test_labels_1d_flat = [
         label for labels in test_labels for label in labels
     ]
-    print("test_labels_1d_flat")
-    print(len(test_labels_1d_flat))
-    print(test_labels_1d_flat[:5])
 
     # Make sure the lengths are the same
     min_length = min(len(predicted_labels_1d_flat), len(test_labels_1d_flat))

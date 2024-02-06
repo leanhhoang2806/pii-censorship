@@ -19,7 +19,7 @@ with open("pii-detection-removal-from-educational-data/train.json") as file:
 # real training: is_small_sample = False, single_GPU = False
 small_sample = None
 strategy = None
-epochs = 1
+epochs = 5
 batch_size = 1
 
 
@@ -28,7 +28,7 @@ single_GPU = True
 
 
 if is_small_sample:
-    small_sample = 0.1
+    small_sample = 0.3
 else:
     small_sample = 1
 # Sample a portion of the data for faster testing
@@ -229,6 +229,8 @@ with strategy.scope():
     count_0 = 0
     for i in range(len(test_labels_1d)):
         if test_labels_1d[i] == predicted_labels_1d[i]: count += 1
-        if predicted_labels_1d[i] == 0: print(f"predicted_labels_1d: {predicted_labels_1d[i]}, test_labels: {test_labels_1d[i]} ")
+        if predicted_labels_1d[i] == 0:
+            count_0 += 1
+            print(f"predicted_labels_1d: {predicted_labels_1d[i]}, test_labels: {test_labels_1d[i]} ")
     print(f"total count: {count}")
     print(f"Percentage accuracy: {count / len(test_labels_1d)}")

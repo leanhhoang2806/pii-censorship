@@ -136,4 +136,4 @@ with strategy.scope():
     test_labels_1d = test_labels_1d_flat[:min_length]
 
 
-    print(classification_report(test_labels_1d, predicted_labels_1d, digits=4))
+    print(classification_report(test_labels_1d, predicted_labels_1d, digits=4, zero_division=1))

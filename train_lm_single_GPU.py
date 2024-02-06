@@ -162,9 +162,10 @@ with strategy.scope():
 
     # check for data consistency
     assert len(test_documents) == len(predicted_labels_id)
-    print(test_labels)
-    print(predicted_labels_id)
+    print(test_labels[0])
+    print(predicted_labels_id[0])
     for i in range(len(predicted_labels_id)):
+        print(f"length of predicted labels: {len(predicted_labels_id[i])}, len of test labels: {len(test_labels[i])}")
         assert len(predicted_labels_id[i]) == len(test_labels[i])
 
     # Converting predicted labels ids to make it flat because the classification report

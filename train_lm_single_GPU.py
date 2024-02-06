@@ -101,12 +101,18 @@ with strategy.scope():
     tokenized_test_inputs = tokenizer(test_documents, padding=True, truncation=True, return_tensors='tf')
 
     # Encode test labels to match the model's output shape
+    # Encode test labels to match the model's output shape
     encoded_test_labels = np.zeros((len(test_labels), max_input_len), dtype=np.int32)
 
     for i, labels in enumerate(test_labels):
         for j, label in enumerate(labels):
             if j < max_input_len:  # Ensure not to cross the maximum allowed length
                 encoded_test_labels[i][j] = label
+
+    # Update encoded_test_labels according to the number of samples after tokenization
+    num_test_samples_after_tokenization = tokenized_test_inputs['input_ids'].shape[0]
+    encoded_test_labels = encoded_test_labels[:num_test_samples_after_tokenization]
+
 
     # Predict labels for the tokenized test documents
     predicted_labels = model.predict(tokenized_test_inputs['input_ids'])

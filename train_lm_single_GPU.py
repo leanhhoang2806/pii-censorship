@@ -15,7 +15,7 @@ with open("pii-detection-removal-from-educational-data/train.json") as file:
     json_data = json.load(file)
 
 # Sample a portion of the data for faster testing
-sampled_data = random.sample(json_data, int(0.01 * len(json_data)))
+sampled_data = random.sample(json_data, int(1 * len(json_data)))
 print(f"Total number of data to train: {len(sampled_data)}")
 
 # Extract features and labels
@@ -148,6 +148,14 @@ with strategy.scope():
     # Print classification report for unfiltered data
     print(classification_report(test_labels_1d, predicted_labels_1d, digits=4, zero_division=1))
 
+
+    print("calculate accuracy manually")
+    # Calculate accuracy for unfiltered data
+    correct_predictions = sum(1 for pred, true in zip(predicted_labels_1d, test_labels_1d) if pred == true and pred != 0)
+    total_predictions = sum(1 for pred in predicted_labels_1d if pred != 0)  # Exclude instances where predicted label is 0
+    accuracy_unfiltered = correct_predictions / total_predictions if total_predictions != 0 else 0
+
+    print("Accuracy (Unfiltered):", accuracy_unfiltered)
 
     # Print three samples of text, true labels, and predicted labels
     # for i in range(3):

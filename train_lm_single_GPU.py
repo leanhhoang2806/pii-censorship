@@ -221,6 +221,7 @@ with strategy.scope():
     #     print("Text:", test_documents[i])
     #     print("True Labels:", test_labels[i])
         print("Predicted Labels:", predicted_labels_id[i])
+        print(predicted_labels_1d[i])
         print("\n")
 
     count = 0

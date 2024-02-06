@@ -6,16 +6,31 @@ from tensorflow.keras.layers import Dense, Embedding, LSTM, Bidirectional
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 import json
-from tqdm import tqdm 
+from tqdm import tqdm
 import random
-from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # Load data
 with open("pii-detection-removal-from-educational-data/train.json") as file:
     json_data = json.load(file)
 
+# parameters Testing: is_small_sample = True
+# small training batches: single_GPU = True
+
+# real training: is_small_sample = False, single_GPU = False
+small_sample = None
+strategy = None
+
+
+is_small_sample = True
+single_GPU = True
+
+
+if is_small_sample:
+    small_sample = 0.01
+else:
+    small_sample = 1
 # Sample a portion of the data for faster testing
-sampled_data = random.sample(json_data, int(1 * len(json_data)))
+sampled_data = random.sample(json_data, int(small_sample * len(json_data)))
 print(f"Total number of data to train: {len(sampled_data)}")
 
 # Extract features and labels
@@ -27,7 +42,7 @@ for item in sampled_data:
     documents.append(item["full_text"])
     expected_output.append(item["labels"])
     for i in item["labels"]:
-        if i != 'O':
+        if i != "O":
             all_labels.add(i)
 all_data = zip(documents, expected_output)
 label_to_index = {}
@@ -35,7 +50,7 @@ label_to_index = {}
 for index, item in enumerate(list(all_labels)):
     label_to_index[item] = index + 1
 
-label_to_index['O'] = 0
+label_to_index["O"] = 0
 for item in expected_output:
     for index, i in enumerate(item):
         item[index] = label_to_index[i]
@@ -50,39 +65,62 @@ dropout = 0.2
 output_categories = len(label_to_index)
 
 # Using GPU, assuming TensorFlow is configured to use GPU
-strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
+if single_GPU:
+    strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
+else:
+    strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
 
 with strategy.scope():
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    tokenized_train_inputs = tokenizer(train_documents, padding=True, truncation=True, return_tensors='tf')
-    max_input_len = tf.shape(tokenized_train_inputs['input_ids'])[1]
-    input_shape = tokenized_train_inputs['input_ids'].shape
+    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+    tokenized_train_inputs = tokenizer(
+        train_documents, padding=True, truncation=True, return_tensors="tf"
+    )
+    max_input_len = tf.shape(tokenized_train_inputs["input_ids"])[1]
+    input_shape = tokenized_train_inputs["input_ids"].shape
 
     # Encode labels to match the model's output shape
     encoded_train_labels = np.zeros((len(train_labels), max_input_len), dtype=np.int32)
-    
-    model = Sequential([
-        Embedding(input_dim=tokenizer.vocab_size, output_dim=neurons, input_shape=(input_shape[1],)),
-        Bidirectional(LSTM(neurons*2, return_sequences=True, dropout=dropout, recurrent_dropout=dropout, implementation=2)),
-        Dense(output_categories, activation='softmax')
-    ])
+
+    model = Sequential(
+        [
+            Embedding(
+                input_dim=tokenizer.vocab_size,
+                output_dim=neurons,
+                input_shape=(input_shape[1],),
+            ),
+            Bidirectional(
+                LSTM(
+                    neurons * 2,
+                    return_sequences=True,
+                    dropout=dropout,
+                    recurrent_dropout=dropout,
+                    implementation=2,
+                )
+            ),
+            Dense(output_categories, activation="softmax"),
+        ]
+    )
 
     # Compile the model with class weights
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    model.compile(
+        optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+    )
 
     # Train the model with tqdm progress bar
     epochs = 10
     batch_size = 1
-    steps_per_epoch = len(tokenized_train_inputs['input_ids']) // batch_size
+    steps_per_epoch = len(tokenized_train_inputs["input_ids"]) // batch_size
 
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1}/{epochs}")
-        progress_bar = tqdm(total=steps_per_epoch, position=0, leave=True)  # Create tqdm progress bar
+        progress_bar = tqdm(
+            total=steps_per_epoch, position=0, leave=True
+        )  # Create tqdm progress bar
 
         for step in range(steps_per_epoch):
             start_idx = step * batch_size
             end_idx = (step + 1) * batch_size
-            batch_inputs = tokenized_train_inputs['input_ids'][start_idx:end_idx]
+            batch_inputs = tokenized_train_inputs["input_ids"][start_idx:end_idx]
             batch_labels = encoded_train_labels[start_idx:end_idx]
 
             # Training step
@@ -98,7 +136,9 @@ with strategy.scope():
     model.summary()
 
     # Tokenize test documents
-    tokenized_test_inputs = tokenizer(test_documents, padding=True, truncation=True, return_tensors='tf')
+    tokenized_test_inputs = tokenizer(
+        test_documents, padding=True, truncation=True, return_tensors="tf"
+    )
 
     # Encode test labels to match the model's output shape
     # Encode test labels to match the model's output shape
@@ -110,12 +150,11 @@ with strategy.scope():
                 encoded_test_labels[i][j] = label
 
     # Update encoded_test_labels according to the number of samples after tokenization
-    num_test_samples_after_tokenization = tokenized_test_inputs['input_ids'].shape[0]
+    num_test_samples_after_tokenization = tokenized_test_inputs["input_ids"].shape[0]
     encoded_test_labels = encoded_test_labels[:num_test_samples_after_tokenization]
 
-
     # Predict labels for the tokenized test documents
-    predicted_labels = model.predict(tokenized_test_inputs['input_ids'])
+    predicted_labels = model.predict(tokenized_test_inputs["input_ids"])
     # Transform model's output to label id
     predicted_labels_id = []
 
@@ -123,44 +162,65 @@ with strategy.scope():
         max_value_index = np.argmax(pred_array, axis=1)
         predicted_labels_id.append(max_value_index.tolist())
 
-    # Converting predicted labels ids to make it flat because the classification report 
+    # Converting predicted labels ids to make it flat because the classification report
     # expects a 1d y_pred and y_true.
-    predicted_labels_1d_flat = [label for prediction in predicted_labels_id for label in prediction]
+    predicted_labels_1d_flat = [
+        label for prediction in predicted_labels_id for label in prediction
+    ]
 
     # Flatten the test_labels without padding
-    test_labels_1d_flat = [label for labels in test_labels for label in labels if label != 0]
+    test_labels_1d_flat = [
+        label for labels in test_labels for label in labels if label != 0
+    ]
 
     # Make sure the lengths are the same
     min_length = min(len(predicted_labels_1d_flat), len(test_labels_1d_flat))
     predicted_labels_1d = predicted_labels_1d_flat[:min_length]
     test_labels_1d = test_labels_1d_flat[:min_length]
 
-
     # Filter out instances where both predicted and true labels are 0
-    filtered_predictions = [pred for pred, true in zip(predicted_labels_1d, test_labels_1d) if pred != 0 or true != 0]
+    filtered_predictions = [
+        pred
+        for pred, true in zip(predicted_labels_1d, test_labels_1d)
+        if pred != 0 or true != 0
+    ]
     filtered_truths = [true for true in test_labels_1d if true != 0]
 
     # Print classification report for filtered data
-    print(classification_report(filtered_truths, filtered_predictions, digits=4, zero_division=1))
-
+    print(
+        classification_report(
+            filtered_truths, filtered_predictions, digits=4, zero_division=1
+        )
+    )
 
     print("For unfiltered report ")
     # Print classification report for unfiltered data
-    print(classification_report(test_labels_1d, predicted_labels_1d, digits=4, zero_division=1))
-
+    print(
+        classification_report(
+            test_labels_1d, predicted_labels_1d, digits=4, zero_division=1
+        )
+    )
 
     print("calculate accuracy manually")
     # Calculate accuracy for unfiltered data
-    correct_predictions = sum(1 for pred, true in zip(predicted_labels_1d, test_labels_1d) if pred == true and pred != 0)
-    total_predictions = sum(1 for pred in predicted_labels_1d if pred != 0)  # Exclude instances where predicted label is 0
-    accuracy_unfiltered = correct_predictions / total_predictions if total_predictions != 0 else 0
+    correct_predictions = sum(
+        1
+        for pred, true in zip(predicted_labels_1d, test_labels_1d)
+        if pred == true and pred != 0
+    )
+    total_predictions = sum(
+        1 for pred in predicted_labels_1d if pred != 0
+    )  # Exclude instances where predicted label is 0
+    accuracy_unfiltered = (
+        correct_predictions / total_predictions if total_predictions != 0 else 0
+    )
 
     print("Accuracy (Unfiltered):", accuracy_unfiltered)
 
     # Print three samples of text, true labels, and predicted labels
-    # for i in range(3):
-    #     print(f"Sample {i + 1}")
-    #     print("Text:", test_documents[i])
-    #     print("True Labels:", test_labels[i])
-    #     print("Predicted Labels:", predicted_labels_id[i])
-    #     print("\n")
+    for i in range(3):
+        print(f"Sample {i + 1}")
+        print("Text:", test_documents[i])
+        print("True Labels:", test_labels[i])
+        print("Predicted Labels:", predicted_labels_id[i])
+        print("\n")

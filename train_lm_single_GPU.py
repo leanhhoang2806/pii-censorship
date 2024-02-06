@@ -166,7 +166,9 @@ with strategy.scope():
         label for prediction in predicted_labels_id for label in prediction
     ]
 
+    print("\n")
     print("predicted_labels_1d_flat")
+    print(len(predicted_labels_1d_flat))
     print(predicted_labels_1d_flat[:5])
 
     # Flatten the test_labels without padding
@@ -174,6 +176,7 @@ with strategy.scope():
         label for labels in test_labels for label in labels if label != 0
     ]
     print("test_labels_1d_flat")
+    print(len(test_labels_1d_flat))
     print(test_labels_1d_flat[:5])
 
     # Make sure the lengths are the same

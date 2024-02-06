@@ -19,6 +19,8 @@ with open("pii-detection-removal-from-educational-data/train.json") as file:
 # real training: is_small_sample = False, single_GPU = False
 small_sample = None
 strategy = None
+epochs = 1
+batch_size = 1
 
 
 is_small_sample = True
@@ -107,8 +109,6 @@ with strategy.scope():
     )
 
     # Train the model with tqdm progress bar
-    epochs = 10
-    batch_size = 1
     steps_per_epoch = len(tokenized_train_inputs["input_ids"]) // batch_size
 
     for epoch in range(epochs):

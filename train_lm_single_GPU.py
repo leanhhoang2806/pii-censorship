@@ -88,7 +88,7 @@ with strategy.scope():
             Embedding(
                 input_dim=tokenizer.vocab_size,
                 output_dim=neurons,
-                input_shape=(input_shape[1],),
+                input_length=max_input_len,
             ),
             Bidirectional(
                 LSTM(
@@ -160,7 +160,7 @@ with strategy.scope():
         max_value_index = np.argmax(pred_array, axis=1)
         predicted_labels_id.append(max_value_index.tolist())
 
-    # assert len(test_documents) == len(predicted_labels)
+    assert len(test_documents) == len(predicted_labels)
     # print(predicted_labels[0])
     # print(test_labels[0])
 

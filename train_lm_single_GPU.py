@@ -61,7 +61,6 @@ for item in expected_output:
 train_documents, test_documents, train_labels, test_labels = train_test_split(
     documents, expected_output, test_size=0.2, random_state=42
 )
-print(test_labels[0])
 
 neurons = 32
 dropout = 0.2
@@ -137,6 +136,7 @@ with strategy.scope():
     # model.summary()
 
     # Tokenize test documents
+    print(test_documents[0])
     tokenized_test_inputs = tokenizer(
         test_documents, padding=True, truncation=True, return_tensors="tf"
     )

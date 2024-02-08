@@ -218,31 +218,30 @@ else:
 
 
 
-documents = []
-expected_output = []
-all_labels = set()
-
-for item in sampled_data:
-    documents.append(item["full_text"])
-    expected_output.append(item["labels"])
-    for i in item["labels"]:
-        if i != "O":
-            all_labels.add(i)
-all_data = zip(documents, expected_output)
-label_to_index = {}
-
-for index, item in enumerate(list(all_labels)):
-    label_to_index[item] = index + 1
-
-label_to_index["O"] = 0
-for item in expected_output:
-    for index, i in enumerate(item):
-        item[index] = label_to_index[i]
-
-
 with strategy.scope():
-    # Initialize BERT tokenizer
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+    documents = []
+    expected_output = []
+    all_labels = set()
+
+    for item in sampled_data:
+        documents.append(item["full_text"])
+        expected_output.append(item["labels"])
+        for i in item["labels"]:
+            if i != "O":
+                all_labels.add(i)
+    all_data = zip(documents, expected_output)
+    label_to_index = {}
+
+    for index, item in enumerate(list(all_labels)):
+        label_to_index[item] = index + 1
+
+    label_to_index["O"] = 0
+    for item in expected_output:
+        for index, i in enumerate(item):
+            item[index] = label_to_index[i]
+        # Initialize BERT tokenizer
+        tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
     # Tokenize train sentences
     train_encodings = tokenizer(documents, padding="max_length", truncation=True, return_tensors='np')

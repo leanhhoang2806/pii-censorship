@@ -206,6 +206,9 @@ from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import classification_report
 import random
 
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+
 # Load data from JSON file
 with open("pii-detection-removal-from-educational-data/train.json") as file:
     json_data = json.load(file)

@@ -247,8 +247,8 @@ with strategy.scope():
     for item in expected_output:
         for index, i in enumerate(item):
             item[index] = label_to_index[i]
-        # Initialize BERT tokenizer
-        tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+     # Initialize BERT tokenizer
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 
     print("All labels: ", all_labels)

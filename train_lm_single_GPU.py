@@ -209,11 +209,14 @@ import random
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
+single_GPU = True
+small_sample = 1
+
 # Load data from JSON file
 with open("pii-detection-removal-from-educational-data/train.json") as file:
     json_data = json.load(file)
-sampled_data = random.sample(json_data, int(0.001 * len(json_data)))
-single_GPU = True
+sampled_data = random.sample(json_data, int(small_sample * len(json_data)))
+
 if single_GPU:
     strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
 else:

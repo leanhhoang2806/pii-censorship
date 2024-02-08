@@ -211,7 +211,7 @@ physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 single_GPU = True
-small_sample = 0.1
+small_sample = 0.01
 
 # Load data from JSON file
 with open("pii-detection-removal-from-educational-data/train.json") as file:

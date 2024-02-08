@@ -209,7 +209,7 @@ import random
 # Load data from JSON file
 with open("pii-detection-removal-from-educational-data/train.json") as file:
     json_data = json.load(file)
-sampled_data = random.sample(json_data, int(0.1 * len(json_data)))
+sampled_data = random.sample(json_data, int(0.001 * len(json_data)))
 single_GPU = True
 if single_GPU:
     strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")

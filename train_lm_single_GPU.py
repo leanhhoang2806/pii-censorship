@@ -205,12 +205,13 @@ from tensorflow.keras.layers import Embedding, Bidirectional, LSTM, TimeDistribu
 from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import classification_report
 import random
+from tqdm import tqdm 
 
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 single_GPU = True
-small_sample = 1
+small_sample = 0.1
 
 # Load data from JSON file
 with open("pii-detection-removal-from-educational-data/train.json") as file:
@@ -249,6 +250,8 @@ with strategy.scope():
         # Initialize BERT tokenizer
         tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
+
+    print("All labels: ", all_labels)
     # Tokenize train sentences
     train_encodings = tokenizer(documents, padding="max_length", truncation=True, return_tensors='np')
     Y_train = [[label for label in sent] for sent in expected_output]
@@ -267,9 +270,15 @@ with strategy.scope():
 
     # Compile model
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-    # Train model
-    model.fit(train_encodings['input_ids'], np.array(Y_train), batch_size=1, epochs=10)
+    epochs = 10
+    with tqdm(total=epochs, desc="Epochs") as pbar_epochs:
+        for epoch in range(epochs):
+            with tqdm(total=len(train_encodings['input_ids']), desc=f"Epoch {epoch+1}/{epochs}") as pbar:
+                for i in range(len(train_encodings['input_ids'])):
+                    # Batch training here
+                    model.train_on_batch(train_encodings['input_ids'][i:i+1], np.array([Y_train[i]]))
+                    pbar.update(1)
+            pbar_epochs.update(1)
 
 
     # Select a random example from the training set

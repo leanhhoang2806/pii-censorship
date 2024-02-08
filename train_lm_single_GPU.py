@@ -211,7 +211,7 @@ physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 single_GPU = True
-small_sample = 0.01
+small_sample = 1
 
 # Load data from JSON file
 with open("pii-detection-removal-from-educational-data/train.json") as file:
@@ -247,11 +247,12 @@ with strategy.scope():
     for item in expected_output:
         for index, i in enumerate(item):
             item[index] = label_to_index[i]
-     # Initialize BERT tokenizer
+    
+    
+    
+    # Initialize BERT tokenizer
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-
-    print("All labels: ", all_labels)
     # Tokenize train sentences
     train_encodings = tokenizer(documents, padding="max_length", truncation=True, return_tensors='np')
     Y_train = [[label for label in sent] for sent in expected_output]

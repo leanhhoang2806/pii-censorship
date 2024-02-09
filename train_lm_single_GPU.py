@@ -362,6 +362,8 @@ from tqdm import tqdm
 
 single_GPU = True
 small_sample = 1
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 # Load data from JSON file
 with open("pii-detection-removal-from-educational-data/train.json") as file:

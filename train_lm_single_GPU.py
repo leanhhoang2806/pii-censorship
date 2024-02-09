@@ -359,9 +359,11 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 import random
 from tqdm import tqdm 
+from tensorflow.keras import layers
+from sklearn.utils.class_weight import compute_class_weight
 
 single_GPU = True
-small_sample = 1
+small_sample = 0.3
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
@@ -418,19 +420,29 @@ with strategy.scope():
     # Model Architecture
     model = Sequential([
         Embedding(input_dim=len(tokenizer.get_vocab()), output_dim=50, input_length=train_encodings['input_ids'].shape[1]),
-        Bidirectional(LSTM(units=50, return_sequences=True)),
+        Bidirectional(LSTM(units=128, return_sequences=True)),
+        layers.Dropout(0.5),  # Adding dropout for regularization
+        Bidirectional(LSTM(units=64, return_sequences=True)),
+        layers.Dropout(0.5),
         TimeDistributed(Dense(num_classes, activation='softmax'))
     ])
 
     # Compile model
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    epochs = 10
+    epochs = 1
+
+        # Convert class weights to a dictionary
+    class_weight = {value: 50. for _, value in label_to_index.items()}
+    class_weight[0] = 1.
+
+    print("class_weight", class_weight)
+
     with tqdm(total=epochs, desc="Epochs") as pbar_epochs:
         for epoch in range(epochs):
             with tqdm(total=len(train_encodings['input_ids']), desc=f"Epoch {epoch+1}/{epochs}") as pbar:
                 for i in range(len(train_encodings['input_ids'])):
                     # Batch training here
-                    model.train_on_batch(train_encodings['input_ids'][i:i+1], np.array([Y_train[i]]))
+                    model.train_on_batch(train_encodings['input_ids'][i:i+1], np.array([Y_train[i]]), class_weight=class_weight)
                     pbar.update(1)
             pbar_epochs.update(1)
 

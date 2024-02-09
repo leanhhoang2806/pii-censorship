@@ -363,10 +363,11 @@ from tensorflow.keras import layers
 from sklearn.utils.class_weight import compute_class_weight
 
 single_GPU = True
-small_sample = 0.3
+small_sample = 1
 epochs = 10
 physical_devices = tf.config.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+if physical_devices:
+    tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 # Load data from JSON file
 with open("pii-detection-removal-from-educational-data/train.json") as file:
@@ -434,8 +435,6 @@ with strategy.scope():
     # Convert class weights to a dictionary
     class_weight = {value: 50. for _, value in label_to_index.items()}
     class_weight[0] = 1.
-
-    print("class_weight", class_weight)
 
     with tqdm(total=epochs, desc="Epochs") as pbar_epochs:
         for epoch in range(epochs):

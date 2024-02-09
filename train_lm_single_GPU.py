@@ -364,6 +364,7 @@ from sklearn.utils.class_weight import compute_class_weight
 
 single_GPU = True
 small_sample = 0.3
+epochs = 10
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
@@ -429,9 +430,8 @@ with strategy.scope():
 
     # Compile model
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    epochs = 1
 
-        # Convert class weights to a dictionary
+    # Convert class weights to a dictionary
     class_weight = {value: 50. for _, value in label_to_index.items()}
     class_weight[0] = 1.
 

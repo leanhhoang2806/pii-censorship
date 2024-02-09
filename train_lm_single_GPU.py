@@ -357,10 +357,9 @@ from tensorflow.keras.layers import Embedding, Bidirectional, LSTM, TimeDistribu
 from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
+from tqdm import tqdm
 import random
-from tqdm import tqdm 
 from tensorflow.keras import layers
-from sklearn.utils.class_weight import compute_class_weight
 
 single_GPU = True
 small_sample = 1
@@ -405,14 +404,14 @@ with strategy.scope():
     # Split the data into train and test sets
     train_documents, test_documents, train_expected_output, test_expected_output = train_test_split(
         documents, expected_output, test_size=0.1, random_state=42
-)
+    )
 
     # Initialize BERT tokenizer
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
     # Tokenize train sentences
-    train_encodings = tokenizer(documents, padding="max_length", truncation=True, return_tensors='np')
-    Y_train = [[label for label in sent] for sent in expected_output]
+    train_encodings = tokenizer(train_documents, padding="max_length", truncation=True, return_tensors='np')
+    Y_train = [[label for label in sent] for sent in train_expected_output]
     Y_train = pad_sequences(Y_train, padding="post", maxlen=train_encodings['input_ids'].shape[1])
 
     # Convert labels to one-hot encoding
@@ -436,14 +435,8 @@ with strategy.scope():
     class_weight = {value: 50. for _, value in label_to_index.items()}
     class_weight[0] = 1.
 
-    with tqdm(total=epochs, desc="Epochs") as pbar_epochs:
-        for epoch in range(epochs):
-            with tqdm(total=len(train_encodings['input_ids']), desc=f"Epoch {epoch+1}/{epochs}") as pbar:
-                for i in range(len(train_encodings['input_ids'])):
-                    # Batch training here
-                    model.train_on_batch(train_encodings['input_ids'][i:i+1], np.array([Y_train[i]]), class_weight=class_weight)
-                    pbar.update(1)
-            pbar_epochs.update(1)
+    # Train the model with class weights
+    model.fit(train_encodings['input_ids'], np.array(Y_train), class_weight=class_weight, batch_size=1, epochs=epochs)
 
     test_encodings = tokenizer(test_documents, padding="max_length", truncation=True, return_tensors='np')
     test_predictions = model.predict(test_encodings['input_ids'])
@@ -473,7 +466,6 @@ with strategy.scope():
     accuracy_without_0 = len([i for i in range(len(predicted_labels_flat)) if predicted_labels_flat[i] == Y_test_flat[i] and predicted_labels_flat[i] != 0]) / len(predicted_labels_flat)
     print("Accuracy without class 0:", accuracy_without_0)
 
-
     random_index = random.randint(0, len(test_documents) - 1)
     test_text = test_documents[random_index]
     test_labels = test_expected_output[random_index]
@@ -498,3 +490,4 @@ with strategy.scope():
     # Print the word predictions
     for word, prediction in word_predictions:
         if prediction != "O": print(f"Word: {word}, Prediction: {prediction}")
+

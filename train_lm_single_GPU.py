@@ -361,13 +361,18 @@ from tqdm import tqdm
 import random
 from tensorflow.keras import layers
 
+print("tf version:", tf.__version__)
+
 single_GPU = True
 small_sample = 0.1
 batch_size=50
 epochs = 1
 physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
-    tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+    tf.config.set_logical_device_configuration(
+        physical_devices[0],
+        [tf.config.LogicalDeviceConfiguration(memory_limit=1024)]
+    )
 
 # Load data from JSON file
 with open("pii-detection-removal-from-educational-data/train.json") as file:
@@ -377,7 +382,7 @@ sampled_data = random.sample(json_data, int(small_sample * len(json_data)))
 if single_GPU:
     strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
 else:
-    strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
+    strategy = tf.distribute.MirroredStrategy()
 
 with strategy.scope():
 
@@ -457,7 +462,6 @@ with strategy.scope():
     Y_test_flat = Y_test.flatten()
     predicted_labels_flat = test_predicted_labels.flatten()
 
-    print("Count of non-zero Y_test_flat:", len([i for i in Y_test_flat if i != 0]))
     # Print the classification report
     print("Classification Report:")
     print(classification_report(Y_test_flat, predicted_labels_flat, zero_division=1))
@@ -493,4 +497,3 @@ with strategy.scope():
     # Print the word predictions
     for word, prediction in word_predictions:
         if prediction != "O": print(f"Word: {word}, Prediction: {prediction}")
-

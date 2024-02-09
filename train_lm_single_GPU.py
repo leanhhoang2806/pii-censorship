@@ -417,6 +417,7 @@ with strategy.scope():
     # Convert labels to one-hot encoding
     num_classes = len(label_to_index)
     Y_train = [to_categorical(i, num_classes=num_classes) for i in Y_train]
+    Y_train = np.reshape(Y_train, (len(Y_train), -1, num_classes))
 
     # Model Architecture
     model = Sequential([

@@ -195,6 +195,158 @@
 #         # print("\n")
 
 # ==================
+# import json
+# import numpy as np
+# import tensorflow as tf
+# from transformers import BertTokenizer
+# from tensorflow.keras.preprocessing.sequence import pad_sequences
+# from tensorflow.keras.models import Sequential
+# from tensorflow.keras.layers import Embedding, Bidirectional, LSTM, TimeDistributed, Dense
+# from tensorflow.keras.utils import to_categorical
+# from sklearn.metrics import classification_report
+# import random
+# from tqdm import tqdm 
+
+# # physical_devices = tf.config.list_physical_devices('GPU')
+# # tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+
+# single_GPU = True
+# small_sample = 0.05
+
+# # Load data from JSON file
+# with open("pii-detection-removal-from-educational-data/train.json") as file:
+#     json_data = json.load(file)
+# sampled_data = random.sample(json_data, int(small_sample * len(json_data)))
+
+# if single_GPU:
+#     strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
+# else:
+#     strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
+
+
+
+# with strategy.scope():
+
+#     documents = []
+#     expected_output = []
+#     all_labels = set()
+
+#     for item in sampled_data:
+#         documents.append(item["full_text"])
+#         expected_output.append(item["labels"])
+#         for i in item["labels"]:
+#             if i != "O":
+#                 all_labels.add(i)
+#     all_data = zip(documents, expected_output)
+#     label_to_index = {}
+
+#     for index, item in enumerate(list(all_labels)):
+#         label_to_index[item] = index + 1
+
+#     label_to_index["O"] = 0
+#     for item in expected_output:
+#         for index, i in enumerate(item):
+#             item[index] = label_to_index[i]
+    
+#     # Initialize BERT tokenizer
+#     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+#     # Tokenize train sentences
+#     train_encodings = tokenizer(documents, padding="max_length", truncation=True, return_tensors='np')
+#     Y_train = [[label for label in sent] for sent in expected_output]
+#     Y_train = pad_sequences(Y_train, padding="post", maxlen=train_encodings['input_ids'].shape[1])
+
+#     # Convert labels to one-hot encoding
+#     num_classes = len(label_to_index)
+#     Y_train = [to_categorical(i, num_classes=num_classes) for i in Y_train]
+
+#     # Model Architecture
+#     model = Sequential([
+#         Embedding(input_dim=len(tokenizer.get_vocab()), output_dim=50, input_length=train_encodings['input_ids'].shape[1]),
+#         Bidirectional(LSTM(units=50, return_sequences=True)),
+#         TimeDistributed(Dense(num_classes, activation='softmax'))
+#     ])
+
+#     # Compile model
+#     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+#     epochs = 1
+#     with tqdm(total=epochs, desc="Epochs") as pbar_epochs:
+#         for epoch in range(epochs):
+#             with tqdm(total=len(train_encodings['input_ids']), desc=f"Epoch {epoch+1}/{epochs}") as pbar:
+#                 for i in range(len(train_encodings['input_ids'])):
+#                     # Batch training here
+#                     model.train_on_batch(train_encodings['input_ids'][i:i+1], np.array([Y_train[i]]))
+#                     pbar.update(1)
+#             pbar_epochs.update(1)
+
+
+#     # Select a random example from the training set
+#     random_index = random.randint(0, len(sampled_data) - 1)
+
+#     # Extract the text and labels from the selected example
+#     test_text = documents[random_index]
+#     test_labels = expected_output[random_index]
+
+#     # Tokenize the test text
+#     test_encoding = tokenizer(test_text, padding="max_length", truncation=True, return_tensors='np')
+
+#     # Predict labels using the trained model
+#     predictions = model.predict(test_encoding['input_ids'])
+
+#     # Decode predictions
+#     predicted_labels = np.argmax(predictions, axis=-1)
+#     idx2label = {v: k for k, v in label_to_index.items()}
+#     decoded_predicted_labels = [idx2label[label] for label in predicted_labels[0]]
+
+#     # Convert test labels to indices
+#     Y_test = [label for label in test_labels]
+#     Y_test = pad_sequences([Y_test], padding="post", maxlen=test_encoding['input_ids'].shape[1])[0]
+
+#     # Flatten the arrays
+#     Y_test_flat = Y_test.flatten()
+#     predicted_labels_flat = predicted_labels.flatten()
+
+#     print("Count of non-zero Y_test_flat:", len([i for i in Y_test_flat if i != 0]))
+#     # Print the classification report
+#     print("Classification Report:")
+#     print(classification_report(Y_test_flat, predicted_labels_flat, zero_division=1))
+
+#     # Calculate and print accuracy metrics
+#     general_accuracy = len([i for i in range(len(predicted_labels_flat)) if predicted_labels_flat[i] == Y_test_flat[i]]) / len(predicted_labels_flat)
+#     print("General Accuracy:", general_accuracy)
+
+#     accuracy_without_0 = len([i for i in range(len(predicted_labels_flat)) if predicted_labels_flat[i] == Y_test_flat[i] and predicted_labels_flat[i] != 0]) / len(predicted_labels_flat)
+#     print("Accuracy without class 0:", accuracy_without_0)
+
+
+#     # Select a random example from the training set
+#     random_index = random.randint(0, len(documents) - 1)
+#     test_text = documents[random_index]
+#     test_labels = expected_output[random_index]
+
+#     # Tokenize the test text
+#     test_encoding = tokenizer(test_text, padding="max_length", truncation=True, return_tensors='np')
+
+#     # Predict labels using the trained model
+#     predictions = model.predict(test_encoding['input_ids'])
+
+#     # Decode predictions
+#     predicted_labels = np.argmax(predictions, axis=-1)
+#     idx2label = {v: k for k, v in label_to_index.items()}
+#     decoded_predicted_labels = [idx2label[label] for label in predicted_labels[0]]
+
+#     # Split the text into words
+#     words = test_text.split()
+
+#     # Map each word to its corresponding predicted label
+#     word_predictions = list(zip(words, decoded_predicted_labels))
+
+#     # Print the word predictions
+#     # for word, prediction in word_predictions:
+#     #     print(f"Word: {word}, Prediction: {prediction}")
+
+
+# ================================
 import json
 import numpy as np
 import tensorflow as tf
@@ -204,11 +356,9 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, Bidirectional, LSTM, TimeDistributed, Dense
 from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
 import random
 from tqdm import tqdm 
-
-physical_devices = tf.config.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 single_GPU = True
 small_sample = 1
@@ -222,8 +372,6 @@ if single_GPU:
     strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
 else:
     strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
-
-
 
 with strategy.scope():
 
@@ -247,9 +395,12 @@ with strategy.scope():
     for item in expected_output:
         for index, i in enumerate(item):
             item[index] = label_to_index[i]
-    
-    
-    
+
+    # Split the data into train and test sets
+    train_documents, test_documents, train_expected_output, test_expected_output = train_test_split(
+        documents, expected_output, test_size=0.1, random_state=42
+)
+
     # Initialize BERT tokenizer
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
@@ -281,34 +432,23 @@ with strategy.scope():
                     pbar.update(1)
             pbar_epochs.update(1)
 
-
-    # Select a random example from the training set
-    random_index = random.randint(0, len(sampled_data) - 1)
-    test_example = sampled_data[random_index]
-
-    # Extract the text and labels from the selected example
-    test_text = test_example["full_text"]
-    test_labels = test_example["labels"]
-
-    # Tokenize the test text
-    test_encoding = tokenizer(test_text, padding="max_length", truncation=True, return_tensors='np')
-
-    # Predict labels using the trained model
-    predictions = model.predict(test_encoding['input_ids'])
+    test_encodings = tokenizer(test_documents, padding="max_length", truncation=True, return_tensors='np')
+    test_predictions = model.predict(test_encodings['input_ids'])
 
     # Decode predictions
-    predicted_labels = np.argmax(predictions, axis=-1)
+    test_predicted_labels = np.argmax(test_predictions, axis=-1)
     idx2label = {v: k for k, v in label_to_index.items()}
-    decoded_predicted_labels = [idx2label[label] for label in predicted_labels[0]]
+    decoded_test_predicted_labels = [[idx2label[label] for label in sent] for sent in test_predicted_labels]
 
     # Convert test labels to indices
-    Y_test = [label for label in test_labels]
-    Y_test = pad_sequences([Y_test], padding="post", maxlen=test_encoding['input_ids'].shape[1])[0]
+    Y_test = [[label for label in sent] for sent in test_expected_output]
+    Y_test = pad_sequences(Y_test, padding="post", maxlen=test_encodings['input_ids'].shape[1])
 
     # Flatten the arrays
     Y_test_flat = Y_test.flatten()
-    predicted_labels_flat = predicted_labels.flatten()
+    predicted_labels_flat = test_predicted_labels.flatten()
 
+    print("Count of non-zero Y_test_flat:", len([i for i in Y_test_flat if i != 0]))
     # Print the classification report
     print("Classification Report:")
     print(classification_report(Y_test_flat, predicted_labels_flat, zero_division=1))
@@ -321,10 +461,9 @@ with strategy.scope():
     print("Accuracy without class 0:", accuracy_without_0)
 
 
-    # Select a random example from the training set
-    random_index = random.randint(0, len(documents) - 1)
-    test_text = documents[random_index]
-    test_labels = expected_output[random_index]
+    random_index = random.randint(0, len(test_documents) - 1)
+    test_text = test_documents[random_index]
+    test_labels = test_expected_output[random_index]
 
     # Tokenize the test text
     test_encoding = tokenizer(test_text, padding="max_length", truncation=True, return_tensors='np')
@@ -344,5 +483,5 @@ with strategy.scope():
     word_predictions = list(zip(words, decoded_predicted_labels))
 
     # Print the word predictions
-    # for word, prediction in word_predictions:
-    #     print(f"Word: {word}, Prediction: {prediction}")
+    for word, prediction in word_predictions:
+        if prediction != "O": print(f"Word: {word}, Prediction: {prediction}")

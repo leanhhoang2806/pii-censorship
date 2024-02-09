@@ -363,6 +363,7 @@ from tensorflow.keras import layers
 
 single_GPU = True
 small_sample = 1
+batch_size=50
 epochs = 10
 physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
@@ -437,7 +438,7 @@ with strategy.scope():
     class_weight[0] = 1.
 
     # Train the model with class weights
-    model.fit(train_encodings['input_ids'], np.array(Y_train), class_weight=class_weight, batch_size=1, epochs=epochs)
+    model.fit(train_encodings['input_ids'], np.array(Y_train), class_weight=class_weight, batch_size=batch_size, epochs=epochs)
 
     test_encodings = tokenizer(test_documents, padding="max_length", truncation=True, return_tensors='np')
     test_predictions = model.predict(test_encodings['input_ids'])

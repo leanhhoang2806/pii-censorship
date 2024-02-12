@@ -364,7 +364,7 @@ from tensorflow.keras import layers
 print("tf version:", tf.__version__)
 
 single_GPU = True
-small_sample = 0.1
+small_sample = 0.01
 batch_size=50
 epochs = 1
 physical_devices = tf.config.list_physical_devices('GPU')

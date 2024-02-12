@@ -493,5 +493,5 @@ with strategy.scope():
     word_predictions = list(zip(words, decoded_predicted_labels))
 
     # Print the word predictions
-    for word, prediction in word_predictions:
-        if prediction != "O": print(f"Word: {word}, Prediction: {prediction}")
+    # for word, prediction in word_predictions:
+    #     if prediction != "O": print(f"Word: {word}, Prediction: {prediction}")

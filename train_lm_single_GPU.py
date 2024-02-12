@@ -362,9 +362,9 @@ import random
 from tensorflow.keras import layers
 
 single_GPU = True
-small_sample = 0.01
+small_sample = 1
 batch_size=50
-epochs = 1
+epochs = 10
 physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
     tf.config.set_logical_device_configuration(
@@ -438,7 +438,7 @@ with strategy.scope():
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     # Convert class weights to a dictionary
-    class_weights = {value: 50. for _, value in label_to_index.items()}
+    class_weights = {value: 50000. for _, value in label_to_index.items()}
     class_weights[0] = 1.
 
     # Train the model with class weights

@@ -1,6 +1,6 @@
-FROM tensorflow/tensorflow:2.3.0-gpu
+# FROM tensorflow/tensorflow:2.3.0-gpu
 
-# FROM tensorflow/tensorflow:2.15.0
+FROM tensorflow/tensorflow:2.15.0
 
 WORKDIR /app
 RUN python -m pip install --upgrade pip

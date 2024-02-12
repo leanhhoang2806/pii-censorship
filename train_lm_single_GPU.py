@@ -364,9 +364,9 @@ from tensorflow.keras import layers
 print("tf version:", tf.__version__)
 
 single_GPU = True
-small_sample = 0.01
+small_sample = 1
 batch_size=50
-epochs = 1
+epochs = 10
 physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
     tf.config.set_logical_device_configuration(
@@ -439,13 +439,8 @@ with strategy.scope():
     # Compile model
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-    # Convert class weights to a dictionary
-    class_weight = {value: 50. for _, value in label_to_index.items()}
-    class_weight[0] = 1.
-
-
     # Train the model with class weights
-    model.fit(train_encodings['input_ids'], np.array(Y_train), class_weight=class_weight, batch_size=batch_size, epochs=epochs)
+    model.fit(train_encodings['input_ids'], np.array(Y_train), batch_size=batch_size, epochs=epochs)
 
     test_encodings = tokenizer(test_documents, padding="max_length", truncation=True, return_tensors='np')
     test_predictions = model.predict(test_encodings['input_ids'])

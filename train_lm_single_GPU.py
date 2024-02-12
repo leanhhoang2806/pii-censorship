@@ -434,6 +434,7 @@ with strategy.scope():
         layers.Dropout(0.5),
         TimeDistributed(Dense(num_classes, activation='softmax'))
     ])
+    
 
     # Compile model
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -441,7 +442,7 @@ with strategy.scope():
     # Convert class weights to a dictionary
     class_weight = {value: 50. for _, value in label_to_index.items()}
     class_weight[0] = 1.
-    print("Y_train shape: ", Y_train.shape)
+
 
     # Train the model with class weights
     model.fit(train_encodings['input_ids'], np.array(Y_train), class_weight=class_weight, batch_size=batch_size, epochs=epochs)

@@ -365,12 +365,12 @@ single_GPU = True
 small_sample = 1
 batch_size=50
 epochs = 10
-physical_devices = tf.config.list_physical_devices('GPU')
-if physical_devices:
-    tf.config.set_logical_device_configuration(
-        physical_devices[0],
-        [tf.config.LogicalDeviceConfiguration(memory_limit=1024)]
-    )
+# physical_devices = tf.config.list_physical_devices('GPU')
+# if physical_devices:
+#     tf.config.set_logical_device_configuration(
+#         physical_devices[0],
+#         [tf.config.LogicalDeviceConfiguration(memory_limit=1024)]
+#     )
 
 # Load data from JSON file
 with open("pii-detection-removal-from-educational-data/train.json") as file:
@@ -438,7 +438,7 @@ with strategy.scope():
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     # Convert class weights to a dictionary
-    class_weights = {value: 50000. for _, value in label_to_index.items()}
+    class_weights = {value: 5000. for _, value in label_to_index.items()}
     class_weights[0] = 1.
 
     # Train the model with class weights

@@ -361,8 +361,6 @@ from tqdm import tqdm
 import random
 from tensorflow.keras import layers
 
-print("tf version:", tf.__version__)
-
 single_GPU = True
 small_sample = 0.01
 batch_size=50
@@ -443,14 +441,8 @@ with strategy.scope():
     class_weights = {value: 50. for _, value in label_to_index.items()}
     class_weights[0] = 1.
 
-    sample_weights = np.zeros_like(Y_train, dtype=float)
-    for i, sentence in enumerate(Y_train):
-        for j, label in enumerate(sentence):
-            sample_weights[i, j, :] = class_weights[label]
-
-
     # Train the model with class weights
-    model.fit(train_encodings['input_ids'], np.array(Y_train), batch_size=batch_size, epochs=epochs, sample_weight=sample_weights)
+    model.fit(train_encodings['input_ids'], np.array(Y_train), batch_size=batch_size, epochs=epochs, class_weight=class_weights)
 
     test_encodings = tokenizer(test_documents, padding="max_length", truncation=True, return_tensors='np')
     test_predictions = model.predict(test_encodings['input_ids'])
